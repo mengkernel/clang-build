@@ -8,7 +8,7 @@ BUILD_DATE="$(date +%Y%m%d)"
 BUILD_DAY="$(date "+%B %-d, %Y")"
 THREADS="$(nproc --all)"
 BRANCH="release/12.x"
-CUSTOM_FLAGS="LLVM_PARALLEL_COMPILE_JOBS=$(($THREADS / 2)) LLVM_PARALLEL_LINK_JOBS=$(($THREADS / 2)) CMAKE_C_FLAGS=-O3 CMAKE_CXX_FLAGS=-O3"
+CUSTOM_FLAGS="LLVM_PARALLEL_COMPILE_JOBS=$THREADS LLVM_PARALLEL_LINK_JOBS=$THREADS CMAKE_C_FLAGS=-O3 CMAKE_CXX_FLAGS=-O3"
 tg_post_msg(){ curl -q -s -X POST "$BOT_MSG_URL" -d chat_id="$TG_CHAT_ID" -d "disable_web_page_preview=true" -d "parse_mode=html" -d text="$1" &> /dev/null; }
 tg_post_build(){ curl --progress-bar -F document=@"$1" "$BOT_MSG_URL" -F chat_id="$TG_CHAT_ID" -F "disable_web_page_preview=true" -F "parse_mode=html" -F caption="$3" &> /dev/null; }
 # Build LLVM
@@ -31,8 +31,8 @@ tg_post_msg "<b>$LLVM_NAME: Binutils Compilation Finished</b>"
 tg_post_msg "<b>Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"
 rm -rf install/include install/lib/*.a install/lib/*.la
 wget -q https://github.com/Diaz1401/clang/raw/main/bin/strip && chmod +x strip
-for f in $(find install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do; ./strip -s "${f: : -1}"; done
-for bin in $(find install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | grep 'ELF .* interpreter' | awk '{print $1}'); do; bin="${bin: : -1}"; echo "$bin"; patchelf --set-rpath "$DIR/install/lib" "$bin"; done
+for f in $(find install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do ./strip -s "${f: : -1}"; done
+for bin in $(find install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | grep 'ELF .* interpreter' | awk '{print $1}'); do bin="${bin: : -1}"; echo "$bin"; patchelf --set-rpath "$DIR/install/lib" "$bin"; done
 clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 binutils_ver="$(ls | grep "^binutils-" | sed "s/binutils-//g")"
 tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Version : </b><code>$clang_version</code>%0A<b>Binutils Version : </b><code>$binutils_ver</code>"

@@ -1,0 +1,15 @@
+kind: pipeline
+name: LLVM Toolchain
+clone:
+  depth: 1
+steps:
+ - name: Build LLVM
+   image: diazaji/python:clang
+   environment:
+     TELEGRAM_TOKEN:
+       from_secret: TELEGRAM_TOKEN
+     GH_TOKEN:
+       from_secret: GH_TOKEN
+   commands:
+      - cd /drone/src
+      - ./build.sh

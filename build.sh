@@ -8,7 +8,7 @@ BUILD_DATE="$(date +%Y%m%d)"
 BUILD_DAY="$(date "+%B %-d, %Y")"
 THREADS="$(nproc --all)"
 BRANCH="release/12.x"
-CUSTOM_FLAGS="LLVM_PARALLEL_COMPILE_JOBS=$THREADS LLVM_PARALLEL_LINK_JOBS=$THREADS CMAKE_C_FLAGS=-O3 CMAKE_CXX_FLAGS=-O3"
+CUSTOM_FLAGS="LLVM_PARALLEL_COMPILE_JOBS=$THREADS LLVM_PARALLEL_LINK_JOBS=$THREADS CMAKE_C_FLAGS=-O3 CMAKE_CXX_FLAGS=-O3 LLVM_LINK_LLVM_DYLIB=ON"
 tg_post_msg(){ curl -q -s -X POST "$BOT_MSG_URL" -d chat_id="$TG_CHAT_ID" -d "disable_web_page_preview=true" -d "parse_mode=html" -d text="$1" &> /dev/null; }
 tg_post_build(){ curl --progress-bar -F document=@"$1" "$BOT_MSG_URL" -F chat_id="$TG_CHAT_ID" -F "disable_web_page_preview=true" -F "parse_mode=html" -F caption="$3" &> /dev/null; }
 # Build LLVM

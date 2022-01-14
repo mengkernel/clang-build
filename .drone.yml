@@ -12,4 +12,5 @@ steps:
        from_secret: GH_TOKEN
    commands:
       - cd /drone/src
+      - apt update && apt upgrade -y
       - ./build.sh

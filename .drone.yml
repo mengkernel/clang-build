@@ -13,4 +13,4 @@ steps:
    commands:
       - cd /drone/src
       - apt update && apt upgrade -y
-      - ./build.sh
+      - ./build.sh main

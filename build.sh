@@ -39,21 +39,23 @@ clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 binutils_ver="$(ls | grep "^binutils-" | sed "s/binutils-//g")"
 tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Version : </b><code>$clang_version</code>%0A<b>Binutils Version : </b><code>$binutils_ver</code>"
 # Finishing
-tg_post_msg "<b>$LLVM_NAME: Cloning clang repository. . .</b>"
 ./lfs.sh
 git config --global user.name Diaz1401
 git config --global user.email reagor8161@outlook.com
-git clone "https://Diaz1401:$GH_TOKEN@github.com/Diaz1401/clang.git" --branch "$REPO_BRANCH" --single-branch
+mkdir clang
 pushd clang || exit
-git lfs install
-rm -rf ./*
+git init
+git checkout -b $REPO_BRANCH
+wget -q https://raw.githubusercontent.com/Diaz1401/clang/main/.gitattributes
+wget -q https://raw.githubusercontent.com/Diaz1401/clang/main/README.md
 cp -rf ../install/* .
-git checkout README.md .gitattributes
-git add .
-git commit -asm "$LLVM_NAME: Bump to $BUILD_DATE build, Clang: $clang_version, Binutils: $binutils_ver"
+git add -f .
+git commit -asm "$LLVM_NAME: $BUILD_DATE build, Clang: $clang_version, Binutils: $binutils_ver"
+git remote add origin "https://Diaz1401:$GH_TOKEN@github.com/Diaz1401/clang.git"
+git lfs install
 tg_post_msg "<b>$LLVM_NAME: Starting push to clang repository. . .</b>"
 BUILD_START=$(date +"%s")
-git push -f
+git push -f origin $REPO_BRANCH
 popd || exit
 BUILD_END=$(date +"%s")
 DIFF=$((BUILD_END - BUILD_START))

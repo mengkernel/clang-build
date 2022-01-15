@@ -43,7 +43,7 @@ git init
 git checkout -b main
 wget -q https://raw.githubusercontent.com/Diaz1401/clang/main/README.md
 cp -rf ../install/* .
-rm -rf clang* ld* llvm* wasm*
+rm clang* ld* llvm* wasm*
 cd bin
 ln -s clang clang++
 ln -s clang clang-cl
@@ -64,6 +64,7 @@ ln -s llvm-readobj llvm-readelf
 ln -s llvm-symbolizer llvm-addr2line
 cd ../lib
 split -b 50m libclang-cpp.so.14git libclang-cpp.so.14git-split && rm libclang-cpp.so.14git
+cd ..
 git add -f .
 git commit -asm "$LLVM_NAME: $BUILD_DATE build, Clang: $clang_version, Binutils: $binutils_ver"
 git remote add origin "https://Diaz1401:$GH_TOKEN@github.com/Diaz1401/clang.git"

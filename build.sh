@@ -43,7 +43,7 @@ git init
 git checkout -b main
 wget -q https://raw.githubusercontent.com/Diaz1401/clang/main/README.md
 cp -rf ../install/* .
-rm clang* ld* llvm* wasm*
+rm clang* ld* lld* llvm* wasm*
 cd bin
 ln -s clang clang++
 ln -s clang clang-cl

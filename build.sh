@@ -17,7 +17,7 @@ tg_post_build(){ curl --progress-bar -F document=@"$1" "$BOT_MSG_URL" -F chat_id
 tg_post_msg "<b>$LLVM_NAME: Toolchain Compilation Started</b>%0A<b>Date : </b><code>$BUILD_DAY</code>"
 tg_post_msg "<b>$LLVM_NAME: Building LLVM. . .</b>"
 BUILD_START=$(date +"%s")
-./build-llvm.py --clang-vendor "$LLVM_NAME" --branch "$BRANCH" --defines "$CUSTOM_FLAGS" --projects "clang;lld;polly;openmp" --targets "ARM;AArch64;X86" --shallow-clone | tee build.log
+./build-llvm.py --clang-vendor "$LLVM_NAME" --branch "$BRANCH" --defines "$CUSTOM_FLAGS" --projects "clang;lld;polly;openmp" --targets "ARM;AArch64" --shallow-clone | tee build.log
 BUILD_END=$(date +"%s")
 DIFF=$((BUILD_END - BUILD_START))
 [ ! -f install/bin/clang-1* ] && { tg_post_build "build.log" "$TG_CHAT_ID" "Error Log"; exit 1; }
@@ -26,13 +26,13 @@ tg_post_msg "<b>Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"
 # Build binutils
 tg_post_msg "<b>$LLVM_NAME: Building Binutils. . .</b>"
 BUILD_START=$(date +"%s")
-./build-binutils.py --targets arm aarch64 x86_64
+./build-binutils.py --targets arm aarch64
 BUILD_END=$(date +"%s")
 DIFF=$((BUILD_END - BUILD_START))
 tg_post_msg "<b>$LLVM_NAME: Binutils Compilation Finished</b>"
 tg_post_msg "<b>Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"
 rm -rf install/include install/lib/*.a install/lib/*.la
-wget -q https://github.com/Diaz1401/clang/raw/main/bin/strip && chmod +x strip
+wget -q https://github.com/Diaz1401/clang/raw/clang-13/bin/strip && chmod +x strip
 for f in $(find install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do ./strip -s "${f: : -1}"; done
 for bin in $(find install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | grep 'ELF .* interpreter' | awk '{print $1}'); do bin="${bin: : -1}"; echo "$bin"; patchelf --set-rpath "$DIR/install/lib" "$bin"; done
 clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"

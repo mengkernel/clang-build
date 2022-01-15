@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-REPO_BRANCH="$1"
 LLVM_NAME="CAT"
 DIR="$(pwd ...)"
 BOT_MSG_URL="https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage"
@@ -9,15 +8,13 @@ BUILD_DATE="$(date +%Y%m%d)"
 BUILD_DAY="$(date "+%B %-d, %Y")"
 THREADS="$(nproc --all)"
 CUSTOM_FLAGS="LLVM_PARALLEL_COMPILE_JOBS=$THREADS LLVM_PARALLEL_LINK_JOBS=$THREADS CMAKE_C_FLAGS=-O3 CMAKE_CXX_FLAGS=-O3"
-# Select clang repository for build
-case "${REPO_BRANCH}" in "clang-12") BRANCH="release/12.x" ;; "clang-13") BRANCH="release/13.x" ;; "main") BRANCH="main" ;; esac
 tg_post_msg(){ curl -q -s -X POST "$BOT_MSG_URL" -d chat_id="$TG_CHAT_ID" -d "disable_web_page_preview=true" -d "parse_mode=html" -d text="$1" &> /dev/null; }
 tg_post_build(){ curl --progress-bar -F document=@"$1" "$BOT_MSG_URL" -F chat_id="$TG_CHAT_ID" -F "disable_web_page_preview=true" -F "parse_mode=html" -F caption="$3" &> /dev/null; }
 # Build LLVM
 tg_post_msg "<b>$LLVM_NAME: Toolchain Compilation Started</b>%0A<b>Date : </b><code>$BUILD_DAY</code>"
 tg_post_msg "<b>$LLVM_NAME: Building LLVM. . .</b>"
 BUILD_START=$(date +"%s")
-./build-llvm.py --clang-vendor "$LLVM_NAME" --branch "$BRANCH" --defines "$CUSTOM_FLAGS" --projects "clang;lld;polly;openmp" --targets "ARM;AArch64" --shallow-clone | tee build.log
+./build-llvm.py --clang-vendor "$LLVM_NAME" --branch main --defines "$CUSTOM_FLAGS" --projects "clang;lld;openmp;polly" --targets "ARM;AArch64;X86" --shallow-clone | tee build.log
 BUILD_END=$(date +"%s")
 DIFF=$((BUILD_END - BUILD_START))
 [ ! -f install/bin/clang-1* ] && { tg_post_build "build.log" "$TG_CHAT_ID" "Error Log"; exit 1; }
@@ -39,24 +36,40 @@ clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 binutils_ver="$(ls | grep "^binutils-" | sed "s/binutils-//g")"
 tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Version : </b><code>$clang_version</code>%0A<b>Binutils Version : </b><code>$binutils_ver</code>"
 # Finishing
-#./lfs.sh
 git config --global user.name Diaz1401
 git config --global user.email reagor8161@outlook.com
-mkdir clang
-pushd clang || exit
+mkdir clang && cd clang
 git init
-git checkout -b $REPO_BRANCH
-wget -q https://raw.githubusercontent.com/Diaz1401/clang/main/.gitattributes
+git checkout -b main
 wget -q https://raw.githubusercontent.com/Diaz1401/clang/main/README.md
 cp -rf ../install/* .
+rm -rf clang* ld* llvm* wasm*
+cd bin
+ln -s clang clang++
+ln -s clang clang-cl
+ln -s clang clang-cpp
+ln -s lld ld64.lld
+ln -s lld ld.lld
+ln -s lld lld-link
+ln -s lld wasm-ld
+ln -s llvm-ar llvm-dlltool
+ln -s llvm-ar llvm-lib
+ln -s llvm-ar llvm-otool
+ln -s llvm-ar llvm-ranlib
+ln -s llvm-objcopy llvm-bitcode-strip
+ln -s llvm-objcopy llvm-install-name-tool
+ln -s llvm-objcopy llvm-strip
+ln -s llvm-rc llvm-windres
+ln -s llvm-readobj llvm-readelf
+ln -s llvm-symbolizer llvm-addr2line
+cd ../lib
+split -b 50m libclang-cpp.so.14git libclang-cpp.so.14git-split && rm libclang-cpp.so.14git
 git add -f .
 git commit -asm "$LLVM_NAME: $BUILD_DATE build, Clang: $clang_version, Binutils: $binutils_ver"
 git remote add origin "https://Diaz1401:$GH_TOKEN@github.com/Diaz1401/clang.git"
-#git lfs install
 tg_post_msg "<b>$LLVM_NAME: Starting push to clang repository. . .</b>"
 BUILD_START=$(date +"%s")
-git push -f origin $REPO_BRANCH
-popd || exit
+git push -f origin main
 BUILD_END=$(date +"%s")
 DIFF=$((BUILD_END - BUILD_START))
 tg_post_msg "<b>Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"

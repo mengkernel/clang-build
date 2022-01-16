@@ -29,7 +29,7 @@ BUILD_END=$(date +"%s")
 DIFF=$((BUILD_END - BUILD_START))
 tg_post_msg "<b>$LLVM_NAME: Binutils Compilation Finished</b>"
 tg_post_msg "<b>Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"
-rm -rf install/include install/lib/*.a install/lib/*.la
+rm -rf install/include install/lib/*.a install/lib/*.la install/.gitignore
 # Strip binaries
 wget -q https://github.com/Diaz1401/clang/raw/clang-13/bin/strip && chmod +x strip
 for f in $(find install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do ./strip -s "${f: : -1}"; done

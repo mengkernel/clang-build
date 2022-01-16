@@ -30,19 +30,21 @@ DIFF=$((BUILD_END - BUILD_START))
 tg_post_msg "<b>$LLVM_NAME: Binutils Compilation Finished</b>"
 tg_post_msg "<b>Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"
 rm -rf install/include install/lib/*.a install/lib/*.la
+# Strip binaries
 wget -q https://github.com/Diaz1401/clang/raw/clang-13/bin/strip && chmod +x strip
 for f in $(find install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do ./strip -s "${f: : -1}"; done
 for bin in $(find install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | grep 'ELF .* interpreter' | awk '{print $1}'); do bin="${bin: : -1}"; echo "$bin"; patchelf --set-rpath "$DIR/install/lib" "$bin"; done
 clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 binutils_ver="$(ls | grep "^binutils-" | sed "s/binutils-//g")"
 tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Version : </b><code>$clang_version</code>%0A<b>Binutils Version : </b><code>$binutils_ver</code>"
-# Finishing
+# Push to GitHub repository
 git config --global user.name Diaz1401
 git config --global user.email reagor8161@outlook.com
 cd install
 git init
 git checkout -b main
 wget -q https://raw.githubusercontent.com/Diaz1401/clang/main/README.md
+# Bypass Github 100MB file limit and remove 50MB file size warnings
 split_file "bin/bugpoint"
 split_file "bin/llvm-lto2"
 split_file "bin/clang-scan-deps"

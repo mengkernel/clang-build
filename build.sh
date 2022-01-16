@@ -39,11 +39,10 @@ tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Versio
 # Finishing
 git config --global user.name Diaz1401
 git config --global user.email reagor8161@outlook.com
-mkdir clang && cd clang
+cd install
 git init
 git checkout -b main
 wget -q https://raw.githubusercontent.com/Diaz1401/clang/main/README.md
-cp -rf ../install/* .
 split_file "bin/bugpoint"
 split_file "bin/llvm-lto2"
 split_file "bin/clang-scan-deps"

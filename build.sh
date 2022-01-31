@@ -15,7 +15,7 @@ split_file(){ split -b 50m $1 $1-split; rm $1; }
 tg_post_msg "<b>$LLVM_NAME: Toolchain Compilation Started</b>%0A<b>Date : </b><code>$BUILD_DAY</code>"
 tg_post_msg "<b>$LLVM_NAME: Building LLVM. . .</b>"
 BUILD_START=$(date +"%s")
-./build-llvm.py --build-stage1-only --install-stage1-only --clang-vendor "$LLVM_NAME" --branch main --defines "$CUSTOM_FLAGS" --projects "clang;compiler-rt;lld;polly" --targets "ARM;AArch64;X86" --shallow-clone | tee build.log
+./build-llvm.py --build-stage1-only --install-stage1-only --clang-vendor "$LLVM_NAME" --branch main --defines "$CUSTOM_FLAGS" --projects "clang;lld;polly" --targets "ARM;AArch64;X86" --shallow-clone | tee build.log
 BUILD_END=$(date +"%s")
 DIFF=$((BUILD_END - BUILD_START))
 [ ! -f install/bin/clang-1* ] && { tg_post_build "build.log" "$TG_CHAT_ID" "Error Log"; exit 1; }

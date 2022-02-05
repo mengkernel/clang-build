@@ -153,7 +153,7 @@ def invoke_configure(build_folder, install_folder, root_folder, target,
         '--disable-gdb', '--disable-werror', '--enable-deterministic-archives',
         '--enable-new-dtags', '--enable-plugins', '--enable-threads',
         '--prefix=%s' % install_folder.as_posix(), '--quiet',
-        '--with-system-zlib'
+        '--with-system-zlib', '--disable-docs'
     ]
     if host_arch:
         configure += [

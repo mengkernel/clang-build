@@ -153,15 +153,15 @@ def invoke_configure(build_folder, install_folder, root_folder, target,
         '--disable-gdb', '--disable-werror', '--enable-deterministic-archives',
         '--enable-new-dtags', '--enable-plugins', '--enable-threads',
         '--prefix=%s' % install_folder.as_posix(), '--quiet',
-        '--with-system-zlib', '--disable-docs'
+        '--with-system-zlib', '--disable-docs', '--enable-lto'
     ]
     if host_arch:
         configure += [
-            'CFLAGS=-O3 -flto -march=%s -mtune=%s' % (host_arch, host_arch),
-            'CXXFLAGS=-O3 -flto -march=%s -mtune=%s' % (host_arch, host_arch)
+            'CFLAGS=-O3 -march=%s -mtune=%s' % (host_arch, host_arch),
+            'CXXFLAGS=-O3 -march=%s -mtune=%s' % (host_arch, host_arch)
         ]
     else:
-        configure += ['CFLAGS=-O3 -flto', 'CXXFLAGS=-O3 -flto']
+        configure += ['CFLAGS=-O3', 'CXXFLAGS=-O3']
 
     configure_arch_flags = {
         "arm-linux-gnueabi": [

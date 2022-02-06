@@ -7,7 +7,7 @@ TG_CHAT_ID="-1001180467256"
 BUILD_DATE="$(date +%Y%m%d)"
 BUILD_DAY="$(date "+%B %-d, %Y")"
 THREADS="$(nproc --all)"
-CUSTOM_FLAGS="LLVM_PARALLEL_COMPILE_JOBS=$THREADS LLVM_PARALLEL_LINK_JOBS=$THREADS CMAKE_C_FLAGS=-O3 CMAKE_CXX_FLAGS=-O3 LLVM_INCLUDE_BENCHMARKS=OFF LLVM_INCLUDE_EXAMPLES=OFF LLVM_INCLUDE_TESTS=OFF"
+CUSTOM_FLAGS="LLVM_PARALLEL_COMPILE_JOBS=$THREADS LLVM_PARALLEL_LINK_JOBS=$THREADS CMAKE_C_FLAGS=-O3 CMAKE_CXX_FLAGS=-O3 LLVM_INCLUDE_BENCHMARKS=OFF LLVM_INCLUDE_EXAMPLES=OFF LLVM_INCLUDE_TESTS=OFF LLVM_BUILD_RUNTIME=OFF LLVM_BUILD_TOOLS=OFF LLVM_ENABLE_BACKTRACES=OFF LLVM_ENABLE_OCAMLDOC=OFF LLVM_BUILD_UTILS=OFF LLVM_BUILD_DOCS=OFF LLVM_OPTIMIZED_TABLEGEN=ON CLANG_ENABLE_ARCMT=OFF CLANG_ENABLE_STATIC_ANALYZER=OFF CLANG_INCLUDE_TESTS=OFF CLANG_BUILD_EXAMPLES=OFF"
 tg_post_msg(){ curl -q -s -X POST "$BOT_MSG_URL" -d chat_id="$TG_CHAT_ID" -d "disable_web_page_preview=true" -d "parse_mode=html" -d text="$1" &> /dev/null; }
 tg_post_build(){ curl --progress-bar -F document=@"$1" "$BOT_MSG_URL" -F chat_id="$TG_CHAT_ID" -F "disable_web_page_preview=true" -F "parse_mode=html" -F caption="$3" &> /dev/null; }
 split_file(){ split -b 50m $1 $1-split; rm $1; }
@@ -15,7 +15,7 @@ split_file(){ split -b 50m $1 $1-split; rm $1; }
 tg_post_msg "<b>$LLVM_NAME: Toolchain Compilation Started</b>%0A<b>Date : </b><code>$BUILD_DAY</code>"
 tg_post_msg "<b>$LLVM_NAME: Building LLVM. . .</b>"
 BUILD_START=$(date +"%s")
-./build-llvm.py --build-stage1-only --install-stage1-only --clang-vendor "$LLVM_NAME" --branch main --defines "$CUSTOM_FLAGS" --projects "clang;lld;polly" --targets "AArch64;X86" --shallow-clone | tee build.log
+./build-llvm.py --build-stage1-only --install-stage1-only --clang-vendor "$LLVM_NAME" --branch main --defines "$CUSTOM_FLAGS" --projects "clang;lld;polly" --targets "AArch64;X86" --shallow-clone --build-type "MinSizeRel" | tee build.log
 BUILD_END=$(date +"%s")
 DIFF=$((BUILD_END - BUILD_START))
 [ ! -f install/bin/clang-1* ] && { tg_post_build "build.log" "$TG_CHAT_ID" "Error Log"; exit 1; }

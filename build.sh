@@ -40,26 +40,20 @@ tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Versio
 # Push to GitHub repository
 git config --global user.name Diaz1401
 git config --global user.email reagor8161@outlook.com
-cd install
-git init
-git checkout -b main
-wget -q https://raw.githubusercontent.com/Diaz1401/clang/main/README.md
+git clone https://Diaz1401:$GH_TOKEN@github.com/Diaz1401/clang.git -b main --single-branch
+cd clang
+rm -rf * && cp -rf ../install/* .
+git checkout README.md
 # Bypass Github 100MB file limit and remove 50MB file size warnings
-split_file "bin/bugpoint"
-split_file "bin/llvm-lto2"
 split_file "bin/clang-scan-deps"
 split_file "bin/clang-repl"
-split_file "bin/opt"
 split_file "bin/clang-15"
-split_file "bin/lld"
 split_file "lib/libclang-cpp.so.15git"
-split_file "lib/libclang.so.15.0.0git"
 git add -f .
 git commit -asm "$LLVM_NAME: $BUILD_DATE build, Clang: $clang_version, Binutils: $binutils_ver"
-git remote add origin "https://Diaz1401:$GH_TOKEN@github.com/Diaz1401/clang.git"
 tg_post_msg "<b>$LLVM_NAME: Starting push to clang repository. . .</b>"
 BUILD_START=$(date +"%s")
-git push -f origin main
+git push origin main
 BUILD_END=$(date +"%s")
 DIFF=$((BUILD_END - BUILD_START))
 tg_post_msg "<b>Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"

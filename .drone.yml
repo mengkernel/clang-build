@@ -14,5 +14,3 @@ steps:
       - cd /drone/src
       - apt update && apt upgrade -y
       - ./build.sh main
-      - wget -q https://raw.githubusercontent.com/Diaz1401/build-script/alioth/kernel-test.sh
-      - bash kernel-test.sh quantic-11

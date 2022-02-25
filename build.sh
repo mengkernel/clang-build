@@ -45,7 +45,7 @@ git config --global user.name Diaz1401
 git config --global user.email reagor8161@outlook.com
 tg_post_msg "<b>$LLVM_NAME: Cloning repository. . .</b>"
 git clone https://Diaz1401:$GITHUB_TOKEN@github.com/Diaz1401/clang.git -b main --single-branch
-cd clang; rm -rf *; cp -rf ../install/* .
+cd clang; rm -rf *; git add .; cp -rf ../install/* .
 # Generate archive
 tg_post_msg "<b>$LLVM_NAME: Generate archive. . .</b>"
 cp ../zstd/programs/zstd .; time tar --use-compress-program='./zstd --ultra -22 -T0' -cf clang.tar.zst aarch64-linux-gnu bin lib share

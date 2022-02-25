@@ -47,13 +47,15 @@ tg_post_msg "<b>$LLVM_NAME: Cloning repository. . .</b>"
 git clone https://Diaz1401:$GITHUB_TOKEN@github.com/Diaz1401/clang.git -b main --single-branch
 cd clang; rm -rf *; git add .; cp -rf ../install/* .
 # Generate archive
-tg_post_msg "<b>$LLVM_NAME: Generate archive. . .</b>"
+tg_post_msg "<b>$LLVM_NAME: Generate release archive. . .</b>"
 cp ../zstd/programs/zstd .; time tar --use-compress-program='./zstd --ultra -22 -T0' -cf clang.tar.zst aarch64-linux-gnu bin lib share
-tar --use-compress-program='./zstd --ultra -22 -T0' -cf zstd.tar.zst zstd
+tar --use-compress-program='./zstd --ultra -22 -T0' -cf zstd-v1.5.2.tar.zst zstd
+md5sum clang.tar.zst > md5sum.txt
+echo "$BUILD_DATE build, Clang: $clang_version, Binutils: $binutils_ver" > version.txt
 git checkout README.md
-git commit -asm "$LLVM_NAME: $BUILD_DATE build, Clang: $clang_version, Binutils: $binutils_ver"
-tg_post_msg "<b>$LLVM_NAME: Starting push to clang repository. . .</b>"
+git add md5sum.txt version.txt
+git commit -asm "Clang: $clang_version-$BUILD_DATE, Binutils: $binutils_ver"
+tg_post_msg "<b>$LLVM_NAME: Starting release to repository. . .</b>"
 git push origin main
-hub release delete latest
-hub release create -a zstd.tar.zst -a clang.tar.zst -m 'Latest Release' latest
-tg_post_msg "<b>$LLVM_NAME: Toolchain pushed to <code>https://github.com/Diaz1401/clang.git</code></b>"
+hub release create -a zstd-v1.5.2.tar.zst -a clang.tar.zst -m 'Clang-$clang_version-$BUILD_DATE' $BUILD_DATE
+tg_post_msg "<b>$LLVM_NAME: Toolchain released to <code>https://github.com/Diaz1401/clang/releases/tag/latest</code></b>"

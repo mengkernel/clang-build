@@ -10,7 +10,6 @@ THREADS="$(nproc --all)"
 CUSTOM_FLAGS="LLVM_PARALLEL_COMPILE_JOBS=$THREADS LLVM_PARALLEL_LINK_JOBS=$THREADS CMAKE_C_FLAGS=-O3 CMAKE_CXX_FLAGS=-O3 LLVM_INCLUDE_BENCHMARKS=OFF LLVM_INCLUDE_EXAMPLES=OFF LLVM_INCLUDE_TESTS=OFF LLVM_INCLUDE_TOOLS=OFF LLVM_INCLUDE_RUNTIMES=OFF LLVM_INCLUDE_DOCS=OFF LLVM_BUILD_TOOLS=OFF LLVM_BUILD_RUNTIME=OFF LLVM_BUILD_UTILS=OFF LLVM_BUILD_TESTS=OFF LLVM_BUILD_EXAMPLES=OFF LLVM_ENABLE_BACKTRACES=OFF LLVM_ENABLE_OCAMLDOC=OFF LLVM_OPTIMIZED_TABLEGEN=ON CLANG_ENABLE_ARCMT=OFF CLANG_ENABLE_STATIC_ANALYZER=OFF CLANG_BUILD_TOOLS=OFF CLANG_INCLUDE_TESTS=OFF CLANG_INCLUDE_DOCS=OFF CLANG_BUILD_EXAMPLES=OFF"
 tg_post_msg(){ curl -q -s -X POST "$BOT_MSG_URL" -d chat_id="$TG_CHAT_ID" -d "disable_web_page_preview=true" -d "parse_mode=html" -d text="$1" &> /dev/null; }
 tg_post_build(){ curl --progress-bar -F document=@"$1" "$BOT_MSG_URL" -F chat_id="$TG_CHAT_ID" -F "disable_web_page_preview=true" -F "parse_mode=html" -F caption="$3" &> /dev/null; }
-split_file(){ split -b 50m $1 $1-split; rm $1; }
 # Build LLVM
 tg_post_msg "<b>$LLVM_NAME: Toolchain Compilation Started</b>%0A<b>Date : </b><code>$BUILD_DAY</code>"
 tg_post_msg "<b>$LLVM_NAME: Building LLVM. . .</b>"
@@ -37,24 +36,24 @@ for bin in $(find install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | gre
 clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 binutils_ver="$(ls | grep "^binutils-" | sed "s/binutils-//g")"
 tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Version : </b><code>$clang_version</code>%0A<b>Binutils Version : </b><code>$binutils_ver</code>"
+tg_post_msg "<b>$LLVM_NAME: Building ZSTD. . .</b>"
+git clone https://github.com/facebook/zstd.git -b v1.5.2 --depth 1 --single-branch
+cd zstd; CC=gcc-11 make -j$(nproc); cd ..
+tg_post_msg "<b>$LLVM_NAME: ZSTD Compilation Finished</b>"
 # Push to GitHub repository
 git config --global user.name Diaz1401
 git config --global user.email reagor8161@outlook.com
-git clone https://Diaz1401:$GH_TOKEN@github.com/Diaz1401/clang.git -b main --single-branch
-cd clang
-rm -rf * && cp -rf ../install/* .
+tg_post_msg "<b>$LLVM_NAME: Cloning repository. . .</b>"
+git clone https://Diaz1401:$GITHUB_TOKEN@github.com/Diaz1401/clang.git -b main --single-branch
+cd clang; rm -rf *; cp -rf ../install/* .
+# Generate archive
+tg_post_msg "<b>$LLVM_NAME: Generate archive. . .</b>"
+cp ../zstd/programs/zstd .; time tar --use-compress-program='./zstd --ultra -22 -T0' -cf clang.tar.zst aarch64-linux-gnu bin lib share
+tar --use-compress-program='./zstd --ultra -22 -T0' -cf zstd.tar.zst zstd
 git checkout README.md
-# Bypass Github 100MB file limit and remove 50MB file size warnings
-split_file "bin/clang-scan-deps"
-split_file "bin/clang-repl"
-split_file "bin/clang-15"
-split_file "lib/libclang-cpp.so.15git"
-git add -f .
 git commit -asm "$LLVM_NAME: $BUILD_DATE build, Clang: $clang_version, Binutils: $binutils_ver"
 tg_post_msg "<b>$LLVM_NAME: Starting push to clang repository. . .</b>"
-BUILD_START=$(date +"%s")
 git push origin main
-BUILD_END=$(date +"%s")
-DIFF=$((BUILD_END - BUILD_START))
-tg_post_msg "<b>Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"
+hub release delete latest
+hub release create -a zstd.tar.zst -a clang.tar.zst -m 'Latest Release' latest
 tg_post_msg "<b>$LLVM_NAME: Toolchain pushed to <code>https://github.com/Diaz1401/clang.git</code></b>"

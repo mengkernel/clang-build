@@ -8,7 +8,7 @@ steps:
    environment:
      TELEGRAM_TOKEN:
        from_secret: TELEGRAM_TOKEN
-     GH_TOKEN:
+     GITHUB_TOKEN:
        from_secret: GH_TOKEN
    commands:
       - cd /drone/src

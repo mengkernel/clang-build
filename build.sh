@@ -31,8 +31,8 @@ tg_post_msg "<b>$LLVM_NAME: Binutils Compilation Finished</b>"
 tg_post_msg "<b>Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"
 rm -rf install/include install/lib/*.a install/lib/*.la install/.gitignore
 # Strip binaries
-wget -q https://github.com/Diaz1401/clang/raw/clang-13/bin/strip && chmod +x strip
-for f in $(find install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do ./strip -s "${f: : -1}"; done
+cp install/bin/llvm-objcopy strip
+for f in $(find install -type f -exec file {} \; | grep 'not stripped' | awk '{print $1}'); do ./strip --strip-all-gnu "${f: : -1}"; done
 for bin in $(find install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | grep 'ELF .* interpreter' | awk '{print $1}'); do bin="${bin: : -1}"; echo "$bin"; patchelf --set-rpath "$DIR/install/lib" "$bin"; done
 clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 binutils_ver="$(ls | grep "^binutils-" | sed "s/binutils-//g")"

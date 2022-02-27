@@ -14,7 +14,8 @@ tg_post_build(){ curl --progress-bar -F document=@"$1" "$BOT_MSG_URL" -F chat_id
 tg_post_msg "<b>$LLVM_NAME: Toolchain Compilation Started</b>%0A<b>Date : </b><code>$BUILD_DAY</code>"
 tg_post_msg "<b>$LLVM_NAME: Building LLVM. . .</b>"
 BUILD_START=$(date +"%s")
-./build-llvm.py --build-stage1-only --install-stage1-only --clang-vendor "$LLVM_NAME" --branch release/14.x --defines "$CUSTOM_FLAGS" --projects "clang;lld;polly" --targets "AArch64;X86" --shallow-clone --build-type "MinSizeRel" | tee build.log
+TOTAL_START=$(date +"%s")
+./build-llvm.py --build-stage1-only --install-stage1-only --clang-vendor "$LLVM_NAME" --branch release/14.x --defines "$CUSTOM_FLAGS" --projects "clang;lld" --targets "AArch64;X86" --shallow-clone --build-type "MinSizeRel" | tee build.log
 BUILD_END=$(date +"%s")
 DIFF=$((BUILD_END - BUILD_START))
 [ ! -f install/bin/clang-1* ] && { tg_post_build "build.log" "$TG_CHAT_ID" "Error Log"; exit 1; }
@@ -35,11 +36,15 @@ for f in $(find install -type f -exec file {} \; | grep 'not stripped' | awk '{p
 for bin in $(find install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | grep 'ELF .* interpreter' | awk '{print $1}'); do bin="${bin: : -1}"; echo "$bin"; patchelf --set-rpath "$DIR/install/lib" "$bin"; done
 clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 binutils_ver="$(ls | grep "^binutils-" | sed "s/binutils-//g")"
-tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Version : </b><code>$clang_version</code>%0A<b>Binutils Version : </b><code>$binutils_ver</code>"
 tg_post_msg "<b>$LLVM_NAME: Building ZSTD. . .</b>"
+BUILD_START=$(date +"%s")
 git clone https://github.com/facebook/zstd.git -b v1.5.2 --depth 1 --single-branch
 cd zstd; CC=gcc-11 make -j$(nproc); cd ..
+BUILD_END=$(date +"%s")
+DIFF=$((BUILD_END - BUILD_START))
 tg_post_msg "<b>$LLVM_NAME: ZSTD Compilation Finished</b>"
+tg_post_msg "<b>Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"
+tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Version : </b><code>$clang_version</code>%0A<b>Binutils Version : </b><code>$binutils_ver</code>"
 # Push to GitHub repository
 git config --global user.name Diaz1401
 git config --global user.email reagor8161@outlook.com
@@ -59,3 +64,6 @@ tg_post_msg "<b>$LLVM_NAME: Starting release to repository. . .</b>"
 git push origin main
 hub release create -a zstd-v1.5.2.tar.zst -a clang.tar.zst -m "Clang-$clang_version-$BUILD_DATE" $BUILD_DATE
 tg_post_msg "<b>$LLVM_NAME: Toolchain released to <code>https://github.com/Diaz1401/clang/releases/tag/latest</code></b>"
+TOTAL_END=$(date +"%s")
+DIFF=$((TOTAL_END - TOTAL_START))
+tg_post_msg "<b>Total CI operation: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"

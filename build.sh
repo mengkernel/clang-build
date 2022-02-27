@@ -23,7 +23,7 @@ tg_post_msg "<b>Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"
 # Build binutils
 tg_post_msg "<b>$LLVM_NAME: Building Binutils. . .</b>"
 BUILD_START=$(date +"%s")
-./build-binutils.py --targets aarch64
+./build-binutils.py --targets aarch64 x86_64
 BUILD_END=$(date +"%s")
 DIFF=$((BUILD_END - BUILD_START))
 tg_post_msg "<b>$LLVM_NAME: Binutils Compilation Finished</b>"

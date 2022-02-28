@@ -53,7 +53,7 @@ git clone https://Diaz1401:$GITHUB_TOKEN@github.com/Diaz1401/clang.git -b main -
 cd clang; rm -rf *; cp -rf ../install/* .
 # Generate archive
 tg_post_msg "<b>$LLVM_NAME: Generate release archive. . .</b>"
-cp ../zstd/programs/zstd .; time tar --use-compress-program='./zstd --ultra -22 -T0' -cf clang.tar.zst aarch64-linux-gnu bin include lib share
+cp ../zstd/programs/zstd .; time tar --use-compress-program='./zstd --ultra -22 -T0' -cf clang.tar.zst aarch64-linux-gnu bin lib share
 tar --use-compress-program='./zstd --ultra -22 -T0' -cf zstd-v1.5.2.tar.zst zstd
 md5sum clang.tar.zst > md5sum.txt
 echo "$BUILD_DATE build, Clang: $clang_version, Binutils: $binutils_ver" > version.txt

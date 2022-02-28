@@ -63,7 +63,7 @@ git commit -asm "Clang: $clang_version-$BUILD_DATE, Binutils: $binutils_ver"
 tg_post_msg "<b>$LLVM_NAME: Starting release to repository. . .</b>"
 git push origin main
 hub release create -a zstd-v1.5.2.tar.zst -a clang.tar.zst -m "Clang-$clang_version-$BUILD_DATE" $BUILD_DATE
-tg_post_msg "<b>$LLVM_NAME: Toolchain released to <code>https://github.com/Diaz1401/clang/releases/tag/latest</code></b>"
+tg_post_msg "<b>$LLVM_NAME: Toolchain released to <code>https://github.com/Diaz1401/clang/releases/latest</code></b>"
 TOTAL_END=$(date +"%s")
 DIFF=$((TOTAL_END - TOTAL_START))
 tg_post_msg "<b>Total CI operation: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"

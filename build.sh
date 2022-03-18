@@ -36,14 +36,7 @@ for f in $(find install -type f -exec file {} \; | grep 'not stripped' | awk '{p
 for bin in $(find install -mindepth 2 -maxdepth 3 -type f -exec file {} \; | grep 'ELF .* interpreter' | awk '{print $1}'); do bin="${bin: : -1}"; echo "$bin"; patchelf --set-rpath "$DIR/install/lib" "$bin"; done
 clang_version="$(install/bin/clang --version | head -n1 | cut -d' ' -f4)"
 binutils_ver="$(ls | grep "^binutils-" | sed "s/binutils-//g")"
-tg_post_msg "<b>$LLVM_NAME: Building ZSTD. . .</b>"
-BUILD_START=$(date +"%s")
-git clone https://github.com/facebook/zstd.git -b v1.5.2 --depth 1 --single-branch
-cd zstd; CC=gcc-11 make -j$(nproc); cd ..
-BUILD_END=$(date +"%s")
-DIFF=$((BUILD_END - BUILD_START))
-tg_post_msg "<b>$LLVM_NAME: ZSTD Compilation Finished</b>"
-tg_post_msg "<b>Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code></b>"
+tar xf zstd*
 tg_post_msg "<b>$LLVM_NAME: Toolchain compilation Finished</b>%0A<b>Clang Version : </b><code>$clang_version</code>%0A<b>Binutils Version : </b><code>$binutils_ver</code>"
 # Push to GitHub repository
 git config --global user.name Diaz1401
@@ -53,8 +46,7 @@ git clone https://Diaz1401:$GITHUB_TOKEN@github.com/Diaz1401/clang.git -b main -
 cd clang; rm -rf *; cp -rf ../install/* .
 # Generate archive
 tg_post_msg "<b>$LLVM_NAME: Generate release archive. . .</b>"
-cp ../zstd/programs/zstd .; time tar --use-compress-program='./zstd --ultra -22 -T0' -cf clang.tar.zst aarch64-linux-gnu bin lib share
-tar --use-compress-program='./zstd --ultra -22 -T0' -cf zstd-v1.5.2.tar.zst zstd
+cp ../zstd .; time tar --use-compress-program='./zstd --ultra -22 -T0' -cf clang.tar.zst aarch64-linux-gnu bin lib share
 md5sum clang.tar.zst > md5sum.txt
 echo "$BUILD_DATE build, Clang: $clang_version, Binutils: $binutils_ver" > version.txt
 git checkout README.md
@@ -62,7 +54,7 @@ git add md5sum.txt version.txt
 git commit -asm "Clang: $clang_version-$BUILD_DATE, Binutils: $binutils_ver"
 tg_post_msg "<b>$LLVM_NAME: Starting release to repository. . .</b>"
 git push origin main
-hub release create -a zstd-v1.5.2.tar.zst -a clang.tar.zst -m "Clang-$clang_version-$BUILD_DATE" $BUILD_DATE
+hub release create -a clang.tar.zst -m "Clang-$clang_version-$BUILD_DATE" $BUILD_DATE
 tg_post_msg "<b>$LLVM_NAME: Toolchain released to <code>https://github.com/Diaz1401/clang/releases/latest</code></b>"
 TOTAL_END=$(date +"%s")
 DIFF=$((TOTAL_END - TOTAL_START))

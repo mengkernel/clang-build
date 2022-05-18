@@ -149,7 +149,7 @@ def invoke_configure(build_folder, install_folder, root_folder, target,
     """
     configure = [
         root_folder.joinpath(utils.current_binutils(), "configure").as_posix(),
-        'CC=gcc-11', 'CXX=g++-11', '--disable-compressed-debug-sections',
+        'CC=gcc-10', 'CXX=g++-10', '--disable-compressed-debug-sections',
         '--disable-gdb', '--disable-werror', '--enable-deterministic-archives',
         '--enable-new-dtags', '--enable-plugins', '--enable-threads',
         '--prefix=%s' % install_folder.as_posix(), '--quiet',

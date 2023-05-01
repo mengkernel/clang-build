@@ -1,18 +1,19 @@
-name: Build test
+name: CI
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+env:
+  TZ: "Asia/Jakarta"
+  GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
+  TELEGRAM_TOKEN: "${{ secrets.TELEGRAM_TOKEN }}"
 jobs:
-  build-test:
-    runs-on: ubuntu-latest
+  build-jet-64:
+    runs-on: buildjet-64vcpu-ubuntu-2204
+    container:
+      image: diazaji/clang:debian
     steps:
     - uses: actions/checkout@v3
-    - name: Install dependencies
-      run: bash ci.sh deps
-    - name: Build LLVM
-      run: bash ci.sh llvm
-    - name: Build binutils
-      run: bash ci.sh binutils
-    - name: Build kernel
-      run: bash ci.sh kernel
+    - name: build
+      run: |
+        apt update && apt upgrade -y
+        ./ci.sh

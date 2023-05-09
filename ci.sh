@@ -41,6 +41,7 @@ TOTAL_START=$(date +"%s")
     -r llvmorg-16.0.3 \
     -D "${CUSTOM_FLAGS}" \
     -t AArch64 X86 \
+    --lto thin \
     --build-stage1-only \
     --build-type "Release" \
     --vendor-string "${LLVM_NAME}" | tee build.log

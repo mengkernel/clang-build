@@ -38,7 +38,7 @@ TOTAL_START=$(date +"%s")
 ./build-llvm.py -s \
     -i "${INSTALL}" \
     -p clang lld polly \
-    -r llvmorg-16.0.2 \
+    -r llvmorg-16.0.3 \
     -D "${CUSTOM_FLAGS}" \
     -t AArch64 X86 \
     --build-stage1-only \

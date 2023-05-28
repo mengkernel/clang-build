@@ -47,10 +47,15 @@ TOTAL_START=$(date +"%s")
   --vendor-string "${LLVM_NAME}" | tee build.log
 BUILD_END=$(date +"%s")
 DIFF=$((BUILD_END - BUILD_START))
-tg_post_msg "<pre>GitHub Action       : LLVM compilation finished ! ! !</pre><pre>Time taken          : $((DIFF / 60))m $((DIFF % 60))s</pre>"
 
-# Check files
-[ ! -f install/bin/clang-* ] && { tg_post_build "build.log" "Error Log"; exit 1; }
+# Check LLVM files
+if [ -f install/bin/clang ]; then
+  tg_post_msg "<pre>GitHub Action       : LLVM compilation finished ! ! !</pre><pre>Time taken          : $((DIFF / 60))m $((DIFF % 60))s</pre>"
+else
+  tg_post_msg "<pre>GitHub Action       : LLVM compilation failed ! ! !</pre>"
+  tg_post_build build.log "<pre>GitHub Action       : LLVM build.log</pre>"
+  exit 1
+fi
 
 # Build binutils
 tg_post_msg "<pre>GitHub Action       : Building Binutils. . .</pre>"
@@ -60,7 +65,15 @@ BUILD_START=$(date +"%s")
   -i "${INSTALL}"
 BUILD_END=$(date +"%s")
 DIFF=$((BUILD_END - BUILD_START))
-tg_post_msg "<pre>GitHub Action       : Binutils compilation finished ! ! !</pre><pre>Time taken          : $((DIFF / 60))m $((DIFF % 60))s</pre>"
+
+# Check Binutils files
+if [ -f install/bin/ld ]; then
+  tg_post_msg "<pre>GitHub Action       : Binutils compilation finished ! ! !</pre><pre>Time taken          : $((DIFF / 60))m $((DIFF % 60))s</pre>"
+else
+  tg_post_msg "<pre>GitHub Action       : Binutils compilation failed ! ! !</pre>"
+  tg_post_build build.log "<pre>GitHub Action       : Binutils build.log</pre>"
+  exit 1
+fi
 
 # Clean unused files
 rm -rf install/include install/lib/*.a install/lib/*.la install/.gitignore
@@ -97,8 +110,8 @@ cp ../zstd .; tar --use-compress-program='./zstd -12' -cf clang.tar.zst aarch64-
 md5sum clang.tar.zst > md5sum.txt
 echo "${BUILD_DATE} build, Clang: ${CLANG_VERSION}, Binutils: ${BINUTILS_VERSION}" > version.txt
 git checkout README.md
-git add md5sum.txt version.txt
-git commit -asm "Clang: ${CLANG_VERSION}-${BUILD_DATE}, Binutils: ${BINUTILS_VERSION}"
+git commit --allow-empty -as \
+  -m "Clang: ${CLANG_VERSION}-${BUILD_DATE}, Binutils: ${BINUTILS_VERSION}" --
 tg_post_msg "<pre>GitHub Action       : Starting release to repository. . .</pre>"
 git push origin main
 hub release create -a clang.tar.zst -m "Clang-${CLANG_VERSION}-${BUILD_DATE}" ${BUILD_DATE}

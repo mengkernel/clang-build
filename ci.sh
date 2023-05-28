@@ -5,8 +5,9 @@ DIR="$(dirname "$(readlink -f "$0")")"
 INSTALL="${DIR}/install"
 BOT_MSG_URL="https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
 TG_CHAT_ID="-1001180467256"
-BUILD_DATE="$(date +%Y%m%d-%H%M-%Z)"
+BUILD_DATE="$(date +%Y%m%d)"
 BUILD_DAY="$(date "+%d %B %Y")"
+BUILD_TAG="$(date +%Y%m%d-%H%M-%Z)"
 THREADS="$(nproc --all)"
 CUSTOM_FLAGS="LLVM_PARALLEL_COMPILE_JOBS=${THREADS} \
 LLVM_PARALLEL_LINK_JOBS=${THREADS} \
@@ -93,8 +94,6 @@ grep 'ELF .* interpreter' .file-idx |
 rm .file-idx
 
 # Clone GitHub repository
-CLANG_VERSION="$(install/bin/clang --version | head -n1 | cut -d ' ' -f4)"
-BINUTILS_VERSION="$(install/bin/ld --version | head -n1 | cut -d ' ' -f5)"
 tg_post_msg "<pre>       GitHub Action: Toolchain compilation Finished</pre><pre>Clang Version       : ${CLANG_VERSION}</pre><pre>Binutils Version    : ${BINUTILS_VERSION}</pre>"
 git config --global user.name Diaz1401
 git config --global user.email reagor8161@outlook.com
@@ -107,14 +106,18 @@ tg_post_msg "<pre>       GitHub Action: Generate release archive. . .</pre>"
 cp ../zstd .; tar --use-compress-program='./zstd -12' -cf clang.tar.zst aarch64-linux-gnu bin lib share
 
 # Push to GitHub repository
-md5sum clang.tar.zst > md5sum.txt
-echo "${BUILD_DATE} build, Clang: ${CLANG_VERSION}, Binutils: ${BINUTILS_VERSION}" > version.txt
-git checkout README.md
+CLANG_VERSION="$(install/bin/clang --version | head -n1 | cut -d ' ' -f4)"
+BINUTILS_VERSION="$(install/bin/ld --version | head -n1 | cut -d ' ' -f5)"
+git checkout README
+cat README |
+  sed s/LLVM_VERSION/$(echo ${CLANG_VERSION}-${BUILD_DATE})/g |
+  sed s/BINUTILS_VERSION/${BINUTILS_VERSION}/g |
+  sed s/SIZE/$(du -m clang.tar.zst)/g > README.md
 git commit --allow-empty -as \
   -m "Clang: ${CLANG_VERSION}-${BUILD_DATE}, Binutils: ${BINUTILS_VERSION}" --
 tg_post_msg "<pre>       GitHub Action: Starting release to repository. . .</pre>"
 git push origin main
-hub release create -a clang.tar.zst -m "Clang-${CLANG_VERSION}-${BUILD_DATE}" ${BUILD_DATE}
+hub release create -a clang.tar.zst -m "Clang-${CLANG_VERSION}-${BUILD_DATE}" ${BUILD_TAG}
 tg_post_msg "<pre>       GitHub Action: Toolchain released to https://github.com/Diaz1401/clang/releases/latest</pre>"
 TOTAL_END=$(date +"%s")
 DIFF=$((TOTAL_END - TOTAL_START))

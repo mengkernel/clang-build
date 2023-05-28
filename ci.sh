@@ -5,7 +5,7 @@ DIR="$(dirname "$(readlink -f "$0")")"
 INSTALL="${DIR}/install"
 BOT_MSG_URL="https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
 TG_CHAT_ID="-1001180467256"
-BUILD_DATE="$(date +%Y%m%d)"
+BUILD_DATE="$(date +%Y%m%d-%H%M-%Z)"
 BUILD_DAY="$(date "+%d %B %Y")"
 THREADS="$(nproc --all)"
 CUSTOM_FLAGS="LLVM_PARALLEL_COMPILE_JOBS=${THREADS} \

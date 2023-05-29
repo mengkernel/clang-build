@@ -92,14 +92,17 @@ git_release(){
   git config --global user.name Diaz1401
   git config --global user.email reagor8161@outlook.com
   git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/Diaz1401/clang.git -b main
+  pushd ${INSTALL}
+  tar --use-compress-program='../zstd -12' -cf clang.tar.zst *
+  popd
   pushd clang
-  tar --use-compress-program='../zstd -12' -cf clang.tar.zst ${INSTALL}/*
   cat README |
     sed s/LLVM_VERSION/${CLANG_VERSION}-${BUILD_DATE}/g |
     sed s/SIZE/$(du -m ${INSTALL}/clang.tar.zst | cut -f1)/g > README.md
-  git commit --allow-empty -as -m ${MESSAGE}
+  git commit --allow-empty -as -m "${MESSAGE}"
   git push origin main
-  hub release create -a clang.tar.zst -m ${MESSAGE} ${BUILD_TAG}
+  cp ${INSTALL}/clang.tar.zst .
+  hub release create -a clang.tar.zst -m "${MESSAGE}" ${BUILD_TAG}
   send_info "GitHub Action       : Toolchain released ! ! !"
   popd
 }

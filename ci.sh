@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 export LLVM_NAME="kucing"
-export DIR="$(dirname "$(readlink -f "$0")")"
-export INSTALL="${DIR}/install"
+export INSTALL="${PWD}/install"
 export CHAT_ID="-1001180467256"
 export BUILD_DATE="$(date +%Y%m%d)"
 export BUILD_DAY="$(date "+%d %B %Y")"
@@ -72,10 +71,10 @@ build_binutils(){
 
 strip_binaries(){
   find ${INSTALL} -type f -exec file {} \; > .file-idx
-  cp ${INSTALL}/bin/strip .
+  cp ${INSTALL}/bin/llvm-objcopy ./strip
   grep "not strip" .file-idx |
     tr ':' ' ' | awk '{print $1}' |
-    while read -r file; do ./strip -s "${file}"; done
+    while read -r file; do ./strip --strip-all-gnu "${file}"; done
 
   # clean unused files
   rm -rf strip .file-idx \
@@ -87,11 +86,9 @@ strip_binaries(){
 
 git_release(){
   CLANG_VERSION="$(${INSTALL}/bin/clang --version | head -n1 | cut -d ' ' -f4)"
-  BINUTILS_VERSION="$(${INSTALL}/bin/ld --version | head -n1 | cut -d ' ' -f5)"
-  MESSAGE="Clang: ${CLANG_VERSION}-${BUILD_DATE}, Binutils: ${BINUTILS_VERSION}"
+  MESSAGE="Clang: ${CLANG_VERSION}-${BUILD_DATE}"
   send_info "GitHub Action       : Release into GitHub . . ."
   send_info "Clang Version       : ${CLANG_VERSION}"
-  send_info "Binutils Version    : ${BINUTILS_VERSION}"
   git config --global user.name Diaz1401
   git config --global user.email reagor8161@outlook.com
   git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/Diaz1401/clang.git -b main
@@ -99,7 +96,6 @@ git_release(){
   tar --use-compress-program='../zstd -12' -cf clang.tar.zst ${INSTALL}/*
   cat README |
     sed s/LLVM_VERSION/${CLANG_VERSION}-${BUILD_DATE}/g |
-    sed s/BINUTILS_VERSION/${BINUTILS_VERSION}/g |
     sed s/SIZE/$(du -m ${INSTALL}/clang.tar.zst | cut -f1)/g > README.md
   git commit --allow-empty -as -m ${MESSAGE}
   git push origin main
@@ -112,7 +108,6 @@ TOTAL_START=$(date +"%s")
 send_info "Date                : ${BUILD_DAY}"
 send_info "GitHub Action       : Toolchain compilation started . . ."
 build_llvm
-build_binutils
 strip_binaries
 git_release
 TOTAL_END=$(date +"%s")

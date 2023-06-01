@@ -93,7 +93,7 @@ git_release(){
   git config --global user.email reagor8161@outlook.com
   git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/Diaz1401/clang.git -b main
   pushd ${INSTALL}
-  tar --use-compress-program='../zstd -12' -cf clang.tar.zst *
+  tar -I'../zstd --ultra -22 -T0' -cf clang.tar.zst *
   popd
   pushd clang
   cat README |

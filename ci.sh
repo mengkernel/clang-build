@@ -28,12 +28,15 @@ build_llvm(){
   send_info "GitHub Action : " "Building LLVM . . ."
   BUILD_START=$(date +"%s")
   ./build-llvm.py -s \
-    -i "${INSTALL}" \
-    -p clang lld polly \
-    -D "${CUSTOM_FLAGS}" \
-    -t AArch64 X86 \
-    --build-stage1-only \
+    --assertions \
+    --bolt \
     --build-type "Release" \
+    --defines "${CUSTOM_FLAGS}" \
+    --install-folder "${INSTALL}" \
+    --lto thin \
+    --pgo llvm \
+    --projects clang lld polly \
+    --targets AArch64 X86 \
     --vendor-string "${LLVM_NAME}" | tee -a build.log
   BUILD_END=$(date +"%s")
   DIFF=$((BUILD_END - BUILD_START))

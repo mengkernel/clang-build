@@ -13,7 +13,7 @@ send_info(){
   curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
     -d chat_id="${CHAT_ID}" \
     -d "parse_mode=html" \
-    -d text="<pre>${1}</pre>" > /dev/null 2>&1
+    -d text="<b>${1}</b><code>${2}</code>" > /dev/null 2>&1
 }
 
 send_file(){
@@ -25,7 +25,7 @@ send_file(){
 }
 
 build_llvm(){
-  send_info "GitHub Action       : Building LLVM . . ."
+  send_info "GitHub Action : " "Building LLVM . . ."
   BUILD_START=$(date +"%s")
   ./build-llvm.py -s \
     -i "${INSTALL}" \
@@ -40,17 +40,17 @@ build_llvm(){
 
   # Check LLVM files
   if [ -f ${INSTALL}/bin/clang ]; then
-    send_info "GitHub Action       : LLVM compilation finished ! ! !"
-    send_info "Time taken          : $((DIFF / 60))m $((DIFF % 60))s"
+    send_info "GitHub Action : " "LLVM compilation finished ! ! !"
+    send_info "Time taken : " "$((DIFF / 60))m $((DIFF % 60))s"
   else
-    send_info "GitHub Action       : LLVM compilation failed ! ! !"
+    send_info "GitHub Action : " "LLVM compilation failed ! ! !"
     send_file "LLVM build.log" ./build.log
     exit 1
   fi
 }
 
 build_binutils(){
-  send_info "GitHub Action       : Building Binutils. . ."
+  send_info "GitHub Action : " "Building Binutils. . ."
   BUILD_START=$(date +"%s")
   ./build-binutils.py \
     -t aarch64 x86_64 \
@@ -60,10 +60,10 @@ build_binutils(){
 
   # Check Binutils files
   if [ -f ${INSTALL}/bin/ld ]; then
-    send_info "GitHub Action       : Binutils compilation finished ! ! !"
-    send_info "Time taken          : $((DIFF / 60))m $((DIFF % 60))s"
+    send_info "GitHub Action : " "Binutils compilation finished ! ! !"
+    send_info "Time taken : " "$((DIFF / 60))m $((DIFF % 60))s"
   else
-    send_info "GitHub Action       : Binutils compilation failed ! ! !"
+    send_info "GitHub Action : " "Binutils compilation failed ! ! !"
     send_file "Binutils build.log" ./build.log
     exit 1
   fi
@@ -87,8 +87,8 @@ strip_binaries(){
 git_release(){
   CLANG_VERSION="$(${INSTALL}/bin/clang --version | head -n1 | cut -d ' ' -f4)"
   MESSAGE="Clang: ${CLANG_VERSION}-${BUILD_DATE}"
-  send_info "GitHub Action       : Release into GitHub . . ."
-  send_info "Clang Version       : ${CLANG_VERSION}"
+  send_info "GitHub Action : " "Release into GitHub . . ."
+  send_info "Clang Version : " "${CLANG_VERSION}"
   git config --global user.name Diaz1401
   git config --global user.email reagor8161@outlook.com
   git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/Diaz1401/clang.git -b main
@@ -103,16 +103,16 @@ git_release(){
   git push origin main
   cp ${INSTALL}/clang.tar.zst .
   hub release create -a clang.tar.zst -m "${MESSAGE}" ${BUILD_TAG}
-  send_info "GitHub Action       : Toolchain released ! ! !"
+  send_info "GitHub Action : " "Toolchain released ! ! !"
   popd
 }
 
 TOTAL_START=$(date +"%s")
-send_info "Date                : ${BUILD_DAY}"
-send_info "GitHub Action       : Toolchain compilation started . . ."
+send_info "Date : " "${BUILD_DAY}"
+send_info "GitHub Action : " "Toolchain compilation started . . ."
 build_llvm
 strip_binaries
 git_release
 TOTAL_END=$(date +"%s")
 DIFF=$((TOTAL_END - TOTAL_START))
-send_info "Total CI operation  : $((DIFF / 60))m $((DIFF % 60))"
+send_info "Total CI operation : " "$((DIFF / 60))m $((DIFF % 60))"

@@ -28,8 +28,6 @@ build_llvm(){
   send_info "GitHub Action : " "Building LLVM . . ."
   BUILD_START=$(date +"%s")
   ./build-llvm.py -s \
-    --assertions \
-    --bolt \
     --build-type "Release" \
     --defines "${CUSTOM_FLAGS}" \
     --install-folder "${INSTALL}" \

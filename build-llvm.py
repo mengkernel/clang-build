@@ -21,7 +21,6 @@ DEFAULT_KERNEL_FOR_PGO = (6, 2, 8)
 
 parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 clone_options = parser.add_mutually_exclusive_group()
-opt_options = parser.add_mutually_exclusive_group()
 
 parser.add_argument('--assertions',
                     help=textwrap.dedent('''\
@@ -89,7 +88,7 @@ parser.add_argument('--bolt',
 
                     '''),
                     action='store_true')
-opt_options.add_argument('--build-stage1-only',
+parser.add_argument('--build-stage1-only',
                          help=textwrap.dedent('''\
                     By default, the script does a multi-stage build: it builds a more lightweight version of
                     LLVM first (stage 1) then uses that build to build the full toolchain (stage 2). This
@@ -99,8 +98,8 @@ opt_options.add_argument('--build-stage1-only',
                     this option is more intended for quick testing and verification of issues and not regular
                     use. However, if your system is slow or can't handle 2+ stage builds, you may need this flag.
 
-                         '''),
-                         action='store_true')
+                    '''),
+                    action='store_true')
 # yapf: disable
 parser.add_argument('--build-type',
                     metavar='BUILD_TYPE',
@@ -252,7 +251,7 @@ parser.add_argument('-p',
 
                     '''),
                     nargs='+')
-opt_options.add_argument('--pgo',
+parser.add_argument('--pgo',
                          metavar='PGO_BENCHMARK',
                          help=textwrap.dedent('''\
                     Build the final compiler with Profile Guided Optimization, which can often improve compile
@@ -297,17 +296,17 @@ opt_options.add_argument('--pgo',
 
                     See https://llvm.org/docs/HowToBuildWithPGO.html for more information.
 
-                         '''),
-                         nargs='+',
-                         choices=[
-                             'kernel-defconfig',
-                             'kernel-allmodconfig',
-                             'kernel-allyesconfig',
-                             'kernel-defconfig-slim',
-                             'kernel-allmodconfig-slim',
-                             'kernel-allyesconfig-slim',
-                             'llvm',
-                         ])
+                    '''),
+                    nargs='+',
+                    choices=[
+                        'kernel-defconfig',
+                        'kernel-allmodconfig',
+                        'kernel-allyesconfig',
+                        'kernel-defconfig-slim',
+                        'kernel-allmodconfig-slim',
+                        'kernel-allyesconfig-slim',
+                        'llvm',
+                    ])
 parser.add_argument('--quiet-cmake',
                     help=textwrap.dedent('''\
                     By default, the script shows all output from cmake. When this option is enabled, the
@@ -567,7 +566,10 @@ if args.pgo:
     instrumented.quiet_cmake = args.quiet_cmake
     instrumented.show_commands = args.show_build_commands
     instrumented.targets = final.targets
-    instrumented.tools = StageTools(Path(bootstrap.folders.build, 'bin'))
+    if args.build_stage1_only:
+        instrumented.tools = StageTools('/usr/lib/llvm-17/bin')
+    else:
+        instrumented.tools = StageTools(Path(bootstrap.folders.build, 'bin'))
 
     tc_build.utils.print_header('Building LLVM (instrumented)')
     instrumented.configure()

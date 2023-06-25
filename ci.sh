@@ -32,10 +32,10 @@ build_llvm(){
     --build-stage1-only \
     --defines "${CUSTOM_FLAGS}" \
     --install-folder "${INSTALL}" \
-    --pgo llvm \
+    --lto thin \
     --projects clang lld polly \
     --targets AArch64 X86 \
-    --vendor-string "${LLVM_NAME}" | tee -a build.log
+    --vendor-string "${LLVM_NAME}" |& tee -a build.log
   BUILD_END=$(date +"%s")
   DIFF=$((BUILD_END - BUILD_START))
 

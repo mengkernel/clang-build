@@ -29,9 +29,9 @@ build_llvm(){
   BUILD_START=$(date +"%s")
   ./build-llvm.py -s \
     --build-type "Release" \
+    --build-stage1-only \
     --defines "${CUSTOM_FLAGS}" \
     --install-folder "${INSTALL}" \
-    --lto thin \
     --pgo llvm \
     --projects clang lld polly \
     --targets AArch64 X86 \

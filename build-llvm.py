@@ -138,6 +138,12 @@ parser.add_argument('-D',
 
                     '''),
                     nargs='+')
+parser.add_argument('--final',
+                    help=textwrap.dedent('''\
+                    By default final build step is skipped. Enable this option to enable final build
+
+                    '''),
+                    action='store_true')
 parser.add_argument('-f',
                     '--full-toolchain',
                     help=textwrap.dedent('''\
@@ -649,52 +655,55 @@ if args.pgo:
 
     instrumented.generate_profdata()
 
-# Final build
-final.check_targets = args.check_targets
-final.cmake_defines.update(common_cmake_defines)
-final.folders.build = Path(build_folder, 'final')
-final.folders.install = Path(args.install_folder).resolve() if args.install_folder else None
-final.install_targets = args.install_targets
-final.quiet_cmake = args.quiet_cmake
-final.show_commands = args.show_build_commands
+if args.final:
+    # Final build
+    final.check_targets = args.check_targets
+    final.cmake_defines.update(common_cmake_defines)
+    final.folders.build = Path(build_folder, 'final')
+    final.folders.install = Path(args.install_folder).resolve() if args.install_folder else None
+    final.install_targets = args.install_targets
+    final.quiet_cmake = args.quiet_cmake
+    final.show_commands = args.show_build_commands
 
-if args.lto:
-    final.cmake_defines['LLVM_ENABLE_LTO'] = args.lto.capitalize()
-if args.pgo:
-    final.cmake_defines['LLVM_PROFDATA_FILE'] = Path(instrumented.folders.build, 'profdata.prof')
+    if args.lto:
+        final.cmake_defines['LLVM_ENABLE_LTO'] = args.lto.capitalize()
+    if args.pgo:
+        final.cmake_defines['LLVM_PROFDATA_FILE'] = Path(instrumented.folders.build, 'profdata.prof')
 
-if use_bootstrap:
-    final.tools = StageTools(Path(bootstrap.folders.build, 'bin'))
-else:
-    # If we skipped bootstrapping, we need to check the dependencies now
-    # and pass along certain user options
-    final.check_dependencies()
-    final.ccache = not args.no_ccache
-    final.tools = host_tools
-
-    # If the user requested BOLT but did not specify it in their projects nor
-    # bootstrapped, we need to enable it to get the tools we need.
-    if args.bolt:
-        if not ('all' in final.projects or 'bolt' in final.projects):
-            final.projects.append('bolt')
-        final.tools.llvm_bolt = Path(final.folders.build, 'bin/llvm-bolt')
-        final.tools.merge_fdata = Path(final.folders.build, 'bin/merge-fdata')
-        final.tools.perf2bolt = Path(final.folders.build, 'bin/perf2bolt')
-
-if args.bolt:
-    final.bolt = True
-    final.bolt_builder = LLVMKernelBuilder()
-    final.bolt_builder.folders.build = Path(build_folder, 'linux')
-    final.bolt_builder.folders.source = lsm.location
-    if final.host_target_is_enabled():
-        llvm_targets = [final.host_target()]
+    if use_bootstrap:
+        final.tools = StageTools(Path(bootstrap.folders.build, 'bin'))
     else:
-        llvm_targets = final.targets[0:1]
-    final.bolt_builder.matrix['defconfig'] = llvm_targets
+        # If we skipped bootstrapping, we need to check the dependencies now
+        # and pass along certain user options
+        final.check_dependencies()
+        final.ccache = not args.no_ccache
+        final.tools = host_tools
 
-tc_build.utils.print_header('Building LLVM (final)')
-final.configure()
-final.build()
-final.show_install_info()
+        # If the user requested BOLT but did not specify it in their projects nor
+        # bootstrapped, we need to enable it to get the tools we need.
+        if args.bolt:
+            if not ('all' in final.projects or 'bolt' in final.projects):
+                final.projects.append('bolt')
+            final.tools.llvm_bolt = Path(final.folders.build, 'bin/llvm-bolt')
+            final.tools.merge_fdata = Path(final.folders.build, 'bin/merge-fdata')
+            final.tools.perf2bolt = Path(final.folders.build, 'bin/perf2bolt')
+
+    if args.bolt:
+        final.bolt = True
+        final.bolt_builder = LLVMKernelBuilder()
+        final.bolt_builder.folders.build = Path(build_folder, 'linux')
+        final.bolt_builder.folders.source = lsm.location
+        if final.host_target_is_enabled():
+            llvm_targets = [final.host_target()]
+        else:
+            llvm_targets = final.targets[0:1]
+        final.bolt_builder.matrix['defconfig'] = llvm_targets
+
+    tc_build.utils.print_header('Building LLVM (final)')
+    final.configure()
+    final.build()
+    final.show_install_info()
+else:
+    tc_build.utils.print_header('Final build skipped')
 
 print(f"Script duration: {tc_build.utils.get_duration(script_start)}")

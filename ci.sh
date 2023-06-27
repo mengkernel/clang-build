@@ -9,6 +9,14 @@ export BUILD_TAG="$(date +%Y%m%d-%H%M-%Z)"
 export NPROC="$(nproc --all)"
 export CUSTOM_FLAGS="LLVM_PARALLEL_COMPILE_JOBS=${NPROC} LLVM_PARALLEL_LINK_JOBS=${NPROC} CMAKE_C_FLAGS='-O3' CMAKE_CXX_FLAGS='-O3'"
 
+for ARGS in $@; do
+  case $ARGS in
+    final)
+      export FINAL=true
+      ;;
+  esac
+done
+
 send_info(){
   curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
     -d chat_id="${CHAT_ID}" \
@@ -27,13 +35,18 @@ send_file(){
 build_llvm(){
   send_info "GitHub Action : " "Building LLVM . . ."
   BUILD_START=$(date +"%s")
-  ./build-llvm.py -s \
+  if [ "$FINAL" == "true" ]; then
+    ADD="--final"
+  else
+    ADD="--pgo llvm"
+  fi
+  ./build-llvm.py ${ADD} \
     --build-type "Release" \
     --build-stage1-only \
     --defines "${CUSTOM_FLAGS}" \
     --install-folder "${INSTALL}" \
-    --lto thin \
     --projects clang lld polly \
+    --shallow-clone \
     --targets AArch64 X86 \
     --vendor-string "${LLVM_NAME}" |& tee -a build.log
   BUILD_END=$(date +"%s")
@@ -112,8 +125,10 @@ TOTAL_START=$(date +"%s")
 send_info "Date : " "${BUILD_DAY}"
 send_info "GitHub Action : " "Toolchain compilation started . . ."
 build_llvm
-strip_binaries
-git_release
+if [ "$FINAL" == "true" ]; then
+  strip_binaries
+  git_release
+fi
 TOTAL_END=$(date +"%s")
 DIFF=$((TOTAL_END - TOTAL_START))
 send_info "Total CI operation : " "$((DIFF / 60))m $((DIFF % 60))"

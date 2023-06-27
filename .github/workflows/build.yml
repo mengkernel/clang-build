@@ -11,13 +11,30 @@ env:
   TELEGRAM_TOKEN: "${{ secrets.TELEGRAM_TOKEN }}"
 
 jobs:
-  build:
+  build-profile:
     runs-on: ubuntu-latest
     container:
       image: diazaji/debian:clang
     steps:
     - uses: actions/checkout@v3
+    - name: Generate Profile
+      run: |
+        ./ci.sh
+    - uses: actions/cache/save@v3
+      with:
+        path: build/llvm/instrumented
+        key: ${{ github.run_id }}
+  build-final:
+    needs: build-profile
+    runs-on: ubuntu-latest
+    container:
+      image: diazaji/debian:clang
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/cache/restore@v3
+      with:
+        path: build/llvm/instrumented
+        key: ${{ github.run_id }}
     - name: Build & Release
       run: |
-        apt update && apt upgrade -y
-        ./ci.sh
+        ./ci.sh final

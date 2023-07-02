@@ -573,7 +573,7 @@ if args.pgo:
     instrumented.show_commands = args.show_build_commands
     instrumented.targets = final.targets
     if args.build_stage1_only:
-        instrumented.tools = StageTools('/usr/lib/llvm-17/bin')
+        instrumented.tools = host_tools
     else:
         instrumented.tools = StageTools(Path(bootstrap.folders.build, 'bin'))
 

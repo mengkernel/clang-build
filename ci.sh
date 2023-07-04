@@ -53,7 +53,7 @@ build_llvm(){
   DIFF=$((BUILD_END - BUILD_START))
 
   # Check LLVM files
-  if [ -f ${INSTALL}/bin/clang ]; then
+  if [ -f ${INSTALL}/bin/clang ] || [ -f ${PWD}/build/llvm/instrumented/profdata.prof ]; then
     send_info "GitHub Action : " "LLVM compilation finished ! ! !"
     send_info "Time taken : " "$((DIFF / 60))m $((DIFF % 60))s"
   else

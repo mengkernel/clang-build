@@ -21,9 +21,9 @@ class HostTools:
         self.ld = self.find_host_ld()
         self.ranlib = self.find_host_ranlib()
 
+        self.llvm_profdata = Path(self.cc.parent, 'llvm-profdata')
         self.clang_tblgen = None
         self.llvm_bolt = None
-        self.llvm_profdata = None
         self.llvm_tblgen = None
         self.merge_fdata = None
         self.perf2bolt = None

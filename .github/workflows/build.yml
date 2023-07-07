@@ -13,13 +13,13 @@ env:
 jobs:
   build-profile:
     runs-on: ubuntu-latest
-    container:
-      image: diazaji/debian:clang
+    container: diazaji/debian:clang
     steps:
     - uses: actions/checkout@v3
     - name: Generate Profile
       run: |
         ./ci.sh
+        find build/llvm/instrumented -type f ! -name 'profdata.prof' -delete
     - uses: actions/cache/save@v3
       with:
         path: build/llvm/instrumented
@@ -27,8 +27,7 @@ jobs:
   build-final:
     needs: build-profile
     runs-on: ubuntu-latest
-    container:
-      image: diazaji/debian:clang
+    container: diazaji/debian:clang
     steps:
     - uses: actions/checkout@v3
     - uses: actions/cache/restore@v3

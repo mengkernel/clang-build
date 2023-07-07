@@ -37,14 +37,13 @@ build_llvm(){
   BUILD_START=$(date +"%s")
   if [ "$FINAL" == "true" ]; then
     ADD="--final"
-  else
-    ADD="--pgo llvm"
   fi
   ./build-llvm.py ${ADD} \
     --build-type "Release" \
     --build-stage1-only \
     --defines "${CUSTOM_FLAGS}" \
     --install-folder "${INSTALL}" \
+    --pgo llvm \
     --projects clang lld polly \
     --shallow-clone \
     --targets AArch64 X86 \

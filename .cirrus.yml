@@ -1,0 +1,30 @@
+env:
+  TELEGRAM_TOKEN: ENCRYPTED[92d58fd061bca092424d04d88491974c0de6f125468a76bac5524a11e22ae5b1a9b88e643377b26193aa577b9364d498]
+  GITHUB_TOKEN: ENCRYPTED[1c6190222fb1ec9458b4bdb918ffffac6b85afd2e34fe1a252778751ba7950f9cfc7184972be014c2d884b894a0e605e]
+  TZ: "Asia/Jakarta"
+  CIRRUS_CLONE_DEPTH: 10
+container:
+  image: diazaji/debian:clang
+  cpu: 8
+  memory: 16G
+profile_task:
+  name: Build LLVM (profile)
+  timeout_in: 120m
+  only_if: $CIRRUS_BRANCH == 'main'
+  script:
+    - ./ci.sh
+    - find build/llvm/instrumented -type f ! -name 'profdata.prof' -delete
+  profdata_cache:
+    reupload_on_changes: true
+    folder: build/llvm/instrumented
+final_task:
+  depends_on: 
+    - 'Build LLVM (profile)'
+  name: Build LLVM (final)
+  timeout_in: 120m
+  only_if: $CIRRUS_BRANCH == 'main'
+  profdata_cache:
+    folder: build/llvm/instrumented
+    fingerprint_key: profile_task
+  script:
+    - ./ci.sh final

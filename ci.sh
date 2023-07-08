@@ -93,9 +93,9 @@ strip_binaries(){
   # clean unused files
   rm -rf strip .file-idx \
     ${INSTALL}/include \
-    ${INSTALL}/lib/cmake \
-    ${INSTALL}/lib/*.a \
-    ${INSTALL}/lib/*.la
+    ${INSTALL}/lib/cmake
+  find ${INSTALL} -type f -name *.a -delete
+  find ${INSTALL} -type f -name *.la -delete
 }
 
 git_release(){

@@ -558,15 +558,17 @@ for define in c_flag_defines:
 if args.build_type:
     common_cmake_defines['CMAKE_BUILD_TYPE'] = args.build_type
 
+if args.full_toolchain:
+    instrumented = LLVMInstrumentedBuilder()
+else:
+    instrumented = LLVMSlimInstrumentedBuilder()
+
+instrumented.folders.build = Path(build_folder, 'instrumented')
+
 if args.pgo and not args.final:
-    if args.full_toolchain:
-        instrumented = LLVMInstrumentedBuilder()
-    else:
-        instrumented = LLVMSlimInstrumentedBuilder()
     instrumented.cmake_defines.update(common_cmake_defines)
     # We run the tests on the instrumented stage if the LLVM benchmark was enabled
     instrumented.check_targets = args.check_targets if 'llvm' in args.pgo else None
-    instrumented.folders.build = Path(build_folder, 'instrumented')
     instrumented.folders.source = llvm_folder
     instrumented.projects = final.projects
     instrumented.quiet_cmake = args.quiet_cmake

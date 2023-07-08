@@ -558,7 +558,7 @@ for define in c_flag_defines:
 if args.build_type:
     common_cmake_defines['CMAKE_BUILD_TYPE'] = args.build_type
 
-if args.pgo:
+if args.pgo and not args.final:
     if args.full_toolchain:
         instrumented = LLVMInstrumentedBuilder()
     else:

@@ -103,8 +103,8 @@ git_release(){
   MESSAGE="Clang: ${CLANG_VERSION}-${BUILD_DATE}"
   send_info "GitHub Action : " "Release into GitHub . . ."
   send_info "Clang Version : " "${CLANG_VERSION}"
-  git config --global user.name Diaz1401
-  git config --global user.email diaznura@outlook.com
+  git config --global user.name github-actions[bot]
+  git config --global user.email github-actions[bot]@users.noreply.github.com
   git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/Mengkernel/clang.git -b main
   pushd ${INSTALL}
   tar -I'../zstd --ultra -22 -T0' -cf clang.tar.zst *

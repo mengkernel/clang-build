@@ -98,8 +98,8 @@ build_kernel() {
     -e LTO_CLANG \
     -e CAT_OPTIMIZE \
     -e LD_DEAD_CODE_DATA_ELIMINATION
-  make -j${NPROC} O=out LLVM=1 LLVM_IAS=1 CROSS_COMPILE=aarch64-linux-gnu- cat_defconfig
-  make -j${NPROC} O=out LLVM=1 LLVM_IAS=1 CROSS_COMPILE=aarch64-linux-gnu-
+  PATH="${ROOT}/build/llvm/instrumented/bin:${PATH}" make -j${NPROC} O=out LLVM=1 LLVM_IAS=1 CROSS_COMPILE=aarch64-linux-gnu- cat_defconfig
+  PATH="${ROOT}/build/llvm/instrumented/bin:${PATH}" make -j${NPROC} O=out LLVM=1 LLVM_IAS=1 CROSS_COMPILE=aarch64-linux-gnu-
   cd -
   if [ -f ${KERNEL}/out/arch/arm64/boot/Image ]; then
     send_info "GitHub Action : " "Kernel build succeed . . ."

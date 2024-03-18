@@ -48,6 +48,7 @@ build_llvm(){
     --projects clang lld polly \
     --shallow-clone \
     --targets AArch64 X86 \
+    --no-update \
     --vendor-string "${LLVM_NAME}" |& tee -a build.log
   BUILD_END=$(date +"%s")
   DIFF=$((BUILD_END - BUILD_START))

@@ -14,10 +14,10 @@ from tc_build.kernel import KernelBuilder, LinuxSourceManager, LLVMKernelBuilder
 from tc_build.tools import HostTools, StageTools
 
 # This is a known good revision of LLVM for building the kernel
-GOOD_REVISION = 'b5983a38cbf4eb405fe9583ab89e15db1dcfa173'
+GOOD_REVISION = 'a828cda9c80282a77b579f8fc9dc17a310173af4'
 
 # The version of the Linux kernel that the script downloads if necessary
-DEFAULT_KERNEL_FOR_PGO = (6, 4, 0)
+DEFAULT_KERNEL_FOR_PGO = (6, 7, 0)
 
 parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 clone_options = parser.add_mutually_exclusive_group()
@@ -39,6 +39,17 @@ parser.add_argument('-b',
 
                     '''),
                     type=str)
+parser.add_argument('--build-targets',
+                    default=['all'],
+                    help=textwrap.dedent('''\
+                    By default, the 'all' target is used as the build target for the final stage. With
+                    this option, targets such as 'distribution' could be used to generate a slimmer
+                    toolchain or targets such as 'clang' or 'llvm-ar' could be used to just test building
+                    individual tools for a bisect.
+
+                    NOTE: This only applies to the final stage build to avoid complicating tc-build internals.
+                    '''),
+                    nargs='+')
 parser.add_argument('--bolt',
                     help=textwrap.dedent('''\
                     Optimize the final clang binary with BOLT (Binary Optimization and Layout Tool), which can
@@ -531,6 +542,7 @@ if (use_bootstrap := not args.build_stage1_only):
     tc_build.utils.print_header('Building LLVM (bootstrap)')
 
     bootstrap = LLVMBootstrapBuilder()
+    bootstrap.build_targets = ['distribution']
     bootstrap.ccache = not args.no_ccache
     bootstrap.cmake_defines.update(common_cmake_defines)
     bootstrap.folders.build = Path(build_folder, 'bootstrap')
@@ -562,8 +574,8 @@ if args.full_toolchain:
     instrumented = LLVMInstrumentedBuilder()
 else:
     instrumented = LLVMSlimInstrumentedBuilder()
-
 instrumented.folders.build = Path(build_folder, 'instrumented')
+instrumented.build_targets = ['all' if args.full_toolchain else 'distribution']
 
 if args.pgo and not args.final:
     instrumented.cmake_defines.update(common_cmake_defines)
@@ -595,6 +607,14 @@ if args.pgo and not args.final:
         llvm_builder.show_commands = args.show_build_commands
         llvm_builder.targets = final.targets
         llvm_builder.tools = StageTools(Path(instrumented.folders.build, 'bin'))
+        # clang-tblgen and llvm-tblgen may not be available from the
+        # instrumented folder if the user did not pass '--full-toolchain', as
+        # only the tools included in the distribution will be available. In
+        # that case, use the bootstrap versions, which should not matter much
+        # for profiling sake.
+        if not args.full_toolchain:
+            llvm_builder.tools.clang_tblgen = Path(bootstrap.folders.build, 'bin/clang-tblgen')
+            llvm_builder.tools.llvm_tblgen = Path(bootstrap.folders.build, 'bin/llvm-tblgen')
         pgo_builders.append(llvm_builder)
 
     # If the user specified both a full and slim build of the same type, remove
@@ -659,6 +679,7 @@ if args.pgo and not args.final:
 
 if args.final:
     # Final build
+    final.build_targets = args.build_targets
     final.check_targets = args.check_targets
     final.cmake_defines.update(common_cmake_defines)
     final.folders.build = Path(build_folder, 'final')

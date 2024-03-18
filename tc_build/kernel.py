@@ -16,7 +16,7 @@ class KernelBuilder(Builder):
     # If the user supplies their own kernel source, it must be at least this
     # version to ensure that all the build commands work, as the build commands
     # were written to target at least this version.
-    MINIMUM_SUPPORTED_VERSION = (6, 1, 7)
+    MINIMUM_SUPPORTED_VERSION = (6, 5, 0)
 
     def __init__(self, arch):
         super().__init__()
@@ -162,6 +162,23 @@ class HexagonKernelBuilder(KernelBuilder):
         super().__init__('hexagon')
 
 
+class LoongArchKernelBuilder(KernelBuilder):
+
+    def __init__(self):
+        super().__init__('loongarch')
+
+    def build(self):
+        self.toolchain_version = self.get_toolchain_version()
+        # https://git.kernel.org/linus/4d35d6e56447a5d09ccd1c1b3a6d3783b2947670
+        if self.toolchain_version < (min_version := (18, 0, 0)):
+            tc_build.utils.print_warning(
+                f"LoongArch does not build with LLVM < {'.'.join(map(str, min_version))}, skipping build..."
+            )
+            return
+
+        super().build()
+
+
 class MIPSKernelBuilder(KernelBuilder):
 
     def __init__(self):
@@ -196,11 +213,16 @@ class PowerPC64KernelBuilder(PowerPCKernelBuilder):
         self.config_targets = ['ppc64_guest_defconfig', 'disable-werror.config']
         self.cross_compile = 'powerpc64-linux-gnu-'
 
-        # https://github.com/ClangBuiltLinux/linux/issues/602
-        self.make_variables['LD'] = self.cross_compile + 'ld'
+    # https://github.com/llvm/llvm-project/commit/33504b3bbe10d5d4caae13efcb99bd159c126070
+    def can_use_ias(self):
+        return self.toolchain_version >= (14, 0, 2)
+
+    # https://github.com/ClangBuiltLinux/linux/issues/1601
+    def needs_binutils(self):
+        return True
 
 
-class PowerPC64LEKernelBuilder(PowerPCKernelBuilder):
+class PowerPC64LEKernelBuilder(PowerPC64KernelBuilder):
 
     def __init__(self):
         super().__init__()
@@ -215,14 +237,6 @@ class PowerPC64LEKernelBuilder(PowerPCKernelBuilder):
             self.make_variables['LD'] = self.cross_compile + 'ld'
 
         super().build()
-
-    # https://github.com/llvm/llvm-project/commit/33504b3bbe10d5d4caae13efcb99bd159c126070
-    def can_use_ias(self):
-        return self.toolchain_version >= (14, 0, 2)
-
-    # https://github.com/ClangBuiltLinux/linux/issues/1601
-    def needs_binutils(self):
-        return True
 
 
 class RISCVKernelBuilder(KernelBuilder):
@@ -284,16 +298,28 @@ class LLVMKernelBuilder(Builder):
         self.toolchain_prefix = None
 
     def build(self):
+        lsm = LinuxSourceManager()
+        lsm.location = self.folders.source
+
         builders = []
 
         allconfig_capable_builders = {
             'AArch64': Arm64KernelBuilder,
             'ARM': ArmKernelBuilder,
             'Hexagon': HexagonKernelBuilder,
+            'PowerPC': PowerPC64KernelBuilder,
             'RISCV': RISCVKernelBuilder,
             'SystemZ': S390KernelBuilder,
             'X86': X8664KernelBuilder,
         }
+
+        # https://git.kernel.org/stable/c/ab3f300524697919f64ae920e904d0836b4057b0
+        # is needed to build ARCH=loongarch without disabling any
+        # configurations (in addition to a copy of clang > 18.0.0 but that is
+        # check when the build is invoked because it depends on the build of
+        # the compiler).
+        if lsm.get_version() >= (6, 6, 8):
+            allconfig_capable_builders['LoongArch'] = LoongArchKernelBuilder
 
         # This is a little convoluted :/
         # The overall idea here is to avoid duplicating builds, so the
@@ -324,8 +350,6 @@ class LLVMKernelBuilder(Builder):
                     builder.config_targets = [config_target]
                     builders.append(builder)
 
-        lsm = LinuxSourceManager()
-        lsm.location = self.folders.source
         tc_build.utils.print_info(f"Building Linux {lsm.get_kernelversion()} for profiling...")
 
         for builder in builders:

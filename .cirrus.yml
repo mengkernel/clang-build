@@ -18,6 +18,7 @@ profile_task:
     - find build/llvm/instrumented -type f ! -name 'profdata.prof' -delete
   profdata_cache:
     folder: build/llvm/instrumented
+    folder: src/llvm-project
     fingerprint_key: $CIRRUS_BUILD_ID
 
 final_task:
@@ -28,6 +29,7 @@ final_task:
   only_if: $CIRRUS_BRANCH == 'main'
   profdata_cache:
     folder: build/llvm/instrumented
+    folder: src/llvm-project
     fingerprint_key: $CIRRUS_BUILD_ID
   script:
     - ./ci.sh final

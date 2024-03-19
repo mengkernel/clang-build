@@ -7,7 +7,7 @@ env:
 container:
   image: diazaji/debian:clang
   cpu: 8
-  memory: 16G
+  memory: 32G
 
 profile_task:
   name: Build LLVM (profile)

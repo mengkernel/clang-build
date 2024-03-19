@@ -4,7 +4,6 @@
 from argparse import ArgumentParser, RawTextHelpFormatter
 from pathlib import Path
 import platform
-import subprocess
 import textwrap
 import time
 
@@ -667,9 +666,6 @@ if args.pgo and not args.final:
             tc_build.utils.print_info('Building LLVM for profiling...')
             pgo_builder.configure()
         pgo_builder.build()
-
-    # Run kernel builds
-    subprocess.run(['./ci.sh', 'kernel'], check=True)
 
     instrumented.generate_profdata()
 

@@ -25,6 +25,9 @@ for ARGS in $@; do
     final)
       export FINAL=true
       ;;
+    release)
+      export RELEASE=true
+      ;;
   esac
 done
 
@@ -48,6 +51,9 @@ build_llvm(){
   BUILD_START=$(date +"%s")
   if [ "$FINAL" == "true" ]; then
     ADD="--final"
+  fi
+  if [ "$RELEASE" == "true" ]; then
+    ADD="${ADD} --ref llvmorg-18.1.1"
   fi
   ./build-llvm.py ${ADD} \
     --build-type "Release" \
@@ -129,7 +135,11 @@ git_release(){
   cd ..
   git config --global user.name github-actions[bot]
   git config --global user.email github-actions[bot]@users.noreply.github.com
-  git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/Mengkernel/clang.git -b main
+  if [ "${RELEASE}" == "true" ]; then
+    git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/Diaz1401/clang-stable.git clang -b main
+  else
+    git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/Mengkernel/clang.git clang -b main
+  fi
   cd clang
   cat README |
     sed s/LLVM_VERSION/${CLANG_VERSION}-${BUILD_DATE}/g |

@@ -84,6 +84,12 @@ build_binutils(){
   fi
 }
 
+build_zstd(){
+  git clone https://github.com/facebook/zstd -b v1.5.6 --depth=1; cd zstd
+  make -j${NPROC} zstd
+  cd ..
+}
+
 strip_binaries(){
   find ${INSTALL} -type f -exec file {} \; > .file-idx
   cp ${INSTALL}/bin/llvm-objcopy ./strip
@@ -100,17 +106,18 @@ strip_binaries(){
 }
 
 git_release(){
+  build_zstd
   CLANG_VERSION="$(${INSTALL}/bin/clang --version | head -n1 | cut -d ' ' -f4)"
   MESSAGE="Clang: ${CLANG_VERSION}-${BUILD_DATE}"
   send_info "GitHub Action : " "Release into GitHub . . ."
   send_info "Clang Version : " "${CLANG_VERSION}"
+  cd ${INSTALL}
+  tar -I'../zstd/zstd --ultra -22 -T0' -cf clang.tar.zst *
+  cd ..
   git config --global user.name github-actions[bot]
   git config --global user.email github-actions[bot]@users.noreply.github.com
   git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/Mengkernel/clang.git -b main
-  pushd ${INSTALL}
-  tar -I'../zstd --ultra -22 -T0' -cf clang.tar.zst *
-  popd
-  pushd clang
+  cd clang
   cat README |
     sed s/LLVM_VERSION/${CLANG_VERSION}-${BUILD_DATE}/g |
     sed s/SIZE/$(du -m ${INSTALL}/clang.tar.zst | cut -f1)/g > README.md
@@ -119,7 +126,7 @@ git_release(){
   cp ${INSTALL}/clang.tar.zst .
   hub release create -a clang.tar.zst -m "${MESSAGE}" ${BUILD_TAG}
   send_info "GitHub Action : " "Toolchain released ! ! !"
-  popd
+  cd ..
 }
 
 TOTAL_START=$(date +"%s")

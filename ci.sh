@@ -1,112 +1,135 @@
 #!/usr/bin/env bash
 
-base=$(dirname "$(readlink -f "$0")")
-install=$base/install
-src=$base/src
+export LLVM_NAME="kucing"
+export INSTALL="${PWD}/install"
+export CHAT_ID="-1001180467256"
+export BUILD_DATE="$(date +%Y%m%d)"
+export BUILD_DAY="$(date "+%d %B %Y")"
+export BUILD_TAG="$(date +%Y%m%d-%H%M-%Z)"
+export NPROC="$(nproc --all)"
+export CUSTOM_FLAGS="LLVM_PARALLEL_COMPILE_JOBS=${NPROC} LLVM_PARALLEL_LINK_JOBS=${NPROC} CMAKE_C_FLAGS='-O3' CMAKE_CXX_FLAGS='-O3'"
 
-set -eu
+for ARGS in $@; do
+  case $ARGS in
+    final)
+      export FINAL=true
+      ;;
+  esac
+done
 
-function parse_parameters() {
-    while (($#)); do
-        case $1 in
-            all | binutils | deps | kernel | llvm) action=$1 ;;
-            *) exit 33 ;;
-        esac
-        shift
-    done
+send_info(){
+  curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
+    -d chat_id="${CHAT_ID}" \
+    -d "parse_mode=html" \
+    -d text="<b>${1}</b><code>${2}</code>" > /dev/null 2>&1
 }
 
-function do_all() {
-    do_deps
-    do_llvm
-    do_binutils
-    do_kernel
+send_file(){
+  curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendDocument \
+    -F document=@"${2}" \
+    -F chat_id="${CHAT_ID}" \
+    -F "parse_mode=html" \
+    -F caption="${1}" > /dev/null 2>&1
 }
 
-function do_binutils() {
-    "$base"/build-binutils.py \
-        --install-folder "$install" \
-        --show-build-commands \
-        --targets x86_64
+build_llvm(){
+  send_info "GitHub Action : " "Building LLVM . . ."
+  BUILD_START=$(date +"%s")
+  if [ "$FINAL" == "true" ]; then
+    ADD="--final"
+  fi
+  ./build-llvm.py ${ADD} \
+    --build-type "Release" \
+    --build-stage1-only \
+    --defines "${CUSTOM_FLAGS}" \
+    --install-folder "${INSTALL}" \
+    --lto thin \
+    --pgo llvm \
+    --projects clang lld polly \
+    --shallow-clone \
+    --targets AArch64 X86 \
+    --no-update \
+    --vendor-string "${LLVM_NAME}" |& tee -a build.log
+  BUILD_END=$(date +"%s")
+  DIFF=$((BUILD_END - BUILD_START))
+
+  # Check LLVM files
+  if [ -f ${INSTALL}/bin/clang ] || [ -f ${PWD}/build/llvm/instrumented/profdata.prof ]; then
+    send_info "GitHub Action : " "LLVM compilation finished ! ! !"
+    send_info "Time taken : " "$((DIFF / 60))m $((DIFF % 60))s"
+  else
+    send_info "GitHub Action : " "LLVM compilation failed ! ! !"
+    send_file "LLVM build.log" ./build.log
+    exit 1
+  fi
 }
 
-function do_deps() {
-    # We only run this when running on GitHub Actions
-    [[ -z ${GITHUB_ACTIONS:-} ]] && return 0
+build_binutils(){
+  send_info "GitHub Action : " "Building Binutils. . ."
+  BUILD_START=$(date +"%s")
+  ./build-binutils.py \
+    -t aarch64 x86_64 \
+    -i "${INSTALL}" | tee -a build.log
+  BUILD_END=$(date +"%s")
+  DIFF=$((BUILD_END - BUILD_START))
 
-    sudo apt-get install -y --no-install-recommends \
-        bc \
-        bison \
-        ca-certificates \
-        clang \
-        cmake \
-        curl \
-        file \
-        flex \
-        gcc \
-        g++ \
-        git \
-        libelf-dev \
-        libssl-dev \
-        lld \
-        make \
-        ninja-build \
-        python3 \
-        texinfo \
-        xz-utils \
-        zlib1g-dev
+  # Check Binutils files
+  if [ -f ${INSTALL}/bin/ld ]; then
+    send_info "GitHub Action : " "Binutils compilation finished ! ! !"
+    send_info "Time taken : " "$((DIFF / 60))m $((DIFF % 60))s"
+  else
+    send_info "GitHub Action : " "Binutils compilation failed ! ! !"
+    send_file "Binutils build.log" ./build.log
+    exit 1
+  fi
 }
 
-function do_kernel() {
-    local branch=linux-rolling-stable
-    local linux=$src/$branch
+strip_binaries(){
+  find ${INSTALL} -type f -exec file {} \; > .file-idx
+  cp ${INSTALL}/bin/llvm-objcopy ./strip
+  grep "not strip" .file-idx |
+    tr ':' ' ' | awk '{print $1}' |
+    while read -r file; do ./strip --strip-all-gnu "${file}"; done
 
-    if [[ -d $linux ]]; then
-        git -C "$linux" fetch --depth=1 origin $branch
-        git -C "$linux" reset --hard FETCH_HEAD
-    else
-        git clone \
-            --branch "$branch" \
-            --depth=1 \
-            --single-branch \
-            https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git \
-            "$linux"
-    fi
-
-    cat <<EOF | env PYTHONPATH="$base"/tc_build python3 -
-from pathlib import Path
-
-from kernel import LLVMKernelBuilder
-
-builder = LLVMKernelBuilder()
-builder.folders.build = Path('$base/build/linux')
-builder.folders.source = Path('$linux')
-builder.matrix = {'defconfig': ['X86']}
-builder.toolchain_prefix = Path('$install')
-
-builder.build()
-EOF
+  # clean unused files
+  rm -rf strip .file-idx \
+    ${INSTALL}/include \
+    ${INSTALL}/lib/cmake
+  find ${INSTALL} -type f -name *.a -delete
+  find ${INSTALL} -type f -name *.la -delete
 }
 
-function do_llvm() {
-    extra_args=()
-    [[ -n ${GITHUB_ACTIONS:-} ]] && extra_args+=(--no-ccache)
-
-    "$base"/build-llvm.py \
-        --assertions \
-        --build-stage1-only \
-        --build-target distribution \
-        --check-targets clang lld llvm \
-        --install-folder "$install" \
-        --install-target distribution \
-        --projects clang lld \
-        --quiet-cmake \
-        --ref release/17.x \
-        --shallow-clone \
-        --show-build-commands \
-        --targets X86 \
-        "${extra_args[@]}"
+git_release(){
+  CLANG_VERSION="$(${INSTALL}/bin/clang --version | head -n1 | cut -d ' ' -f4)"
+  MESSAGE="Clang: ${CLANG_VERSION}-${BUILD_DATE}"
+  send_info "GitHub Action : " "Release into GitHub . . ."
+  send_info "Clang Version : " "${CLANG_VERSION}"
+  git config --global user.name github-actions[bot]
+  git config --global user.email github-actions[bot]@users.noreply.github.com
+  git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/Mengkernel/clang.git -b main
+  pushd ${INSTALL}
+  tar -I'../zstd --ultra -22 -T0' -cf clang.tar.zst *
+  popd
+  pushd clang
+  cat README |
+    sed s/LLVM_VERSION/${CLANG_VERSION}-${BUILD_DATE}/g |
+    sed s/SIZE/$(du -m ${INSTALL}/clang.tar.zst | cut -f1)/g > README.md
+  git commit --allow-empty -as -m "${MESSAGE}"
+  git push origin main
+  cp ${INSTALL}/clang.tar.zst .
+  hub release create -a clang.tar.zst -m "${MESSAGE}" ${BUILD_TAG}
+  send_info "GitHub Action : " "Toolchain released ! ! !"
+  popd
 }
 
-parse_parameters "$@"
-do_"${action:=all}"
+TOTAL_START=$(date +"%s")
+send_info "Date : " "${BUILD_DAY}"
+send_info "GitHub Action : " "Toolchain compilation started . . ."
+build_llvm
+if [ "$FINAL" == "true" ]; then
+  strip_binaries
+  git_release
+fi
+TOTAL_END=$(date +"%s")
+DIFF=$((TOTAL_END - TOTAL_START))
+send_info "Total CI operation : " "$((DIFF / 60))m $((DIFF % 60))"

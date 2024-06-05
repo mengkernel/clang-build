@@ -7,7 +7,18 @@ export BUILD_DATE="$(date +%Y%m%d)"
 export BUILD_DAY="$(date "+%d %B %Y")"
 export BUILD_TAG="$(date +%Y%m%d-%H%M-%Z)"
 export NPROC="$(nproc --all)"
-export CUSTOM_FLAGS="LLVM_PARALLEL_COMPILE_JOBS=${NPROC} LLVM_PARALLEL_LINK_JOBS=${NPROC} CMAKE_C_FLAGS='-O3' CMAKE_CXX_FLAGS='-O3'"
+export CUSTOM_FLAGS="
+  LLVM_PARALLEL_COMPILE_JOBS=${NPROC} 
+  LLVM_PARALLEL_LINK_JOBS=${NPROC}
+  CMAKE_C_FLAGS='-O3 -ffunction-sections -fdata-sections -march=haswell -mtune=haswell -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
+  CMAKE_CXX_FLAGS='-O3 -ffunction-sections -fdata-sections -march=haswell -mtune=haswell -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
+  CMAKE_ASM_FLAGS='-O3 -ffunction-sections -fdata-sections -march=haswell -mtune=haswell -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
+  CMAKE_ASM_FLAGS='-O3 -ffunction-sections -fdata-sections -march=haswell -mtune=haswell -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
+  CMAKE_EXE_LINKER_FLAGS='-Wl,-O3,--lto-O3,--gc-sections,--strip-debug'
+  CMAKE_MODULE_LINKER_FLAGS='-Wl,-O3,--lto-O3,--gc-sections,--strip-debug'
+  CMAKE_SHARED_LINKER_FLAGS='-Wl,-O3,--lto-O3,--gc-sections,--strip-debug'
+  CMAKE_STATIC_LINKER_FLAGS='-Wl,-O3,--lto-O3,--gc-sections,--strip-debug'
+  "
 
 for ARGS in $@; do
   case $ARGS in

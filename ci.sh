@@ -53,7 +53,7 @@ build_llvm(){
     ADD="--final"
   fi
   if [ "$RELEASE" == "true" ]; then
-    ADD="${ADD} --ref llvmorg-18.1.1"
+    ADD="${ADD} --ref llvmorg-18.1.7"
   fi
   ./build-llvm.py ${ADD} \
     --build-type "Release" \

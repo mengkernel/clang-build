@@ -125,7 +125,7 @@ git_release(){
   send_info "GitHub Action : " "Release into GitHub . . ."
   send_info "Clang Version : " "${CLANG_VERSION}"
   cd ${INSTALL}
-  tar -I'../zstd/zstd --ultra -22 -T0' -cf clang.tar.zst *
+  tar -I'../zstd/zstd -8 -T8' -cf clang.tar.zst *
   cd ..
   git config --global user.name github-actions[bot]
   git config --global user.email github-actions[bot]@users.noreply.github.com

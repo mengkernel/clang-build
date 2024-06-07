@@ -12,9 +12,9 @@ container:
 profile_task:
   name: Build LLVM (profile)
   timeout_in: 120m
-  only_if: $CIRRUS_BRANCH == 'main'
+  only_if: $CIRRUS_BRANCH == 'release'
   script:
-    - ./ci.sh
+    - ./ci.sh release
     - find build/llvm/instrumented -type f ! -name 'profdata.prof' -delete
   profdata_cache:
     folder: build/llvm/instrumented
@@ -26,10 +26,10 @@ final_task:
     - 'Build LLVM (profile)'
   name: Build LLVM (final)
   timeout_in: 120m
-  only_if: $CIRRUS_BRANCH == 'main'
+  only_if: $CIRRUS_BRANCH == 'release'
   profdata_cache:
     folder: build/llvm/instrumented
     folder: src/llvm-project
     fingerprint_key: $CIRRUS_BUILD_ID
   script:
-    - ./ci.sh final
+    - ./ci.sh release final

@@ -95,7 +95,9 @@ build_llvm() {
 build_zstd() {
   git clone https://github.com/facebook/zstd -b v1.5.6 --depth=1
   cd zstd
-  make -j${NPROC} zstd
+  cmake build/cmake -DCMAKE_INSTALL_PREFIX="${INSTALL}" |& tee -a build.log
+  make -j${NPROC} |& tee -a build.log
+  make install -j${NPROC} |& tee -a build.log
   cd -
 }
 
@@ -115,13 +117,12 @@ strip_binaries() {
 }
 
 git_release() {
-  build_zstd
   CLANG_VERSION="$(${INSTALL}/bin/clang --version | head -n1 | cut -d ' ' -f4)"
   MESSAGE="Clang: ${CLANG_VERSION}-${BUILD_DATE}"
   send_info "GitHub Action : " "Release into GitHub . . ."
   send_info "Clang Version : " "${CLANG_VERSION}"
   cd ${INSTALL}
-  tar -I'../zstd/zstd -16 -T8' -cf clang.tar.zst *
+  tar -I"${INSTALL}/bin/zstd -16 -T8" -cf clang.tar.zst *
   cd ..
   git config --global user.name github-actions[bot]
   git config --global user.email github-actions[bot]@users.noreply.github.com
@@ -145,6 +146,7 @@ git_release() {
 TOTAL_START=$(date +"%s")
 send_info "Date : " "${BUILD_DAY}"
 send_info "GitHub Action : " "Toolchain compilation started . . ."
+build_zstd
 build_llvm
 if ${FINAL}; then
   strip_binaries

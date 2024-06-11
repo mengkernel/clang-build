@@ -69,6 +69,7 @@ build_llvm() {
     --build-stage1-only \
     --defines "${CUSTOM_FLAGS}" \
     --install-folder "${INSTALL}" \
+    --install-targets clang lld polly \
     --lto thin \
     --pgo llvm \
     --bolt \

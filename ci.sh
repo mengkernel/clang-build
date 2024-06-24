@@ -93,7 +93,7 @@ build_llvm() {
 build_zstd() {
   git clone https://github.com/facebook/zstd -b v1.5.6 --depth=1
   cd zstd
-  cmake build/cmake -DCMAKE_INSTALL_PREFIX="${INSTALL}" |& tee -a build.log
+  cmake build/cmake -DCMAKE_INSTALL_PREFIX="${INSTALL}/.zstd" |& tee -a build.log
   make -j${NPROC} |& tee -a build.log
   make install -j${NPROC} |& tee -a build.log
   cd -
@@ -117,7 +117,7 @@ git_release() {
   send_info "GitHub Action : " "Release into GitHub . . ."
   send_info "Clang Version : " "${CLANG_VERSION}"
   cd ${INSTALL}
-  tar -I"${INSTALL}/bin/zstd -16 -T8" -cf clang.tar.zst *
+  tar -I"${INSTALL}/.zstd/bin/zstd -16 -T8" -cf clang.tar.zst *
   cd ..
   git config --global user.name github-actions[bot]
   git config --global user.email github-actions[bot]@users.noreply.github.com

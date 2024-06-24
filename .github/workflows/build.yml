@@ -19,12 +19,11 @@ jobs:
           remove-codeql: 'true'
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Restore ccache
+      - name: Restore & save ccache
         uses: hendrikmuhs/ccache-action@main
         with:
           key: ccache-llvm
           max-size: 5G
-          save: false
       - name: Install dependencies
         shell: sudo bash --noprofile --norc -e -o pipefail {0}
         run: |

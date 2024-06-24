@@ -15,10 +15,10 @@ export CUSTOM_FLAGS="
   LLVM_OPTIMIZED_TABLEGEN=ON
   CMAKE_C_FLAGS='-O3 -pipe -ffunction-sections -fdata-sections -fno-plt -fmerge-all-constants -fomit-frame-pointer -funroll-loops -falign-functions=64 -march=haswell -mtune=haswell -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
   CMAKE_CXX_FLAGS='-O3 -pipe -ffunction-sections -fdata-sections -fno-plt -fmerge-all-constants -fomit-frame-pointer -funroll-loops -falign-functions=64 -march=haswell -mtune=haswell -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
-  CMAKE_EXE_LINKER_FLAGS='-Wl,-O3,--lto-O3,--lto-CGO3,--gc-sections,--strip-debug'
-  CMAKE_MODULE_LINKER_FLAGS='-Wl,-O3,--lto-O3,,--lto-CGO3,--gc-sections,--strip-debug'
-  CMAKE_SHARED_LINKER_FLAGS='-Wl,-O3,--lto-O3,,--lto-CGO3,--gc-sections,--strip-debug'
-  CMAKE_STATIC_LINKER_FLAGS='-Wl,-O3,--lto-O3,,--lto-CGO3,--gc-sections,--strip-debug'
+  CMAKE_EXE_LINKER_FLAGS='-O3 --lto-O3 --lto-CGO3 --gc-sections --strip-debug'
+  CMAKE_MODULE_LINKER_FLAGS='-O3 --lto-O3 --lto-CGO3 --gc-sections --strip-debug'
+  CMAKE_SHARED_LINKER_FLAGS='-O3 --lto-O3 --lto-CGO3 --gc-sections --strip-debug'
+  CMAKE_STATIC_LINKER_FLAGS='-O3 --lto-O3 --lto-CGO3 --gc-sections --strip-debug'
   "
 
 FINAL=false

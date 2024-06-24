@@ -12,7 +12,6 @@ export CUSTOM_FLAGS="
   LLVM_PARALLEL_TABLEGEN_JOBS=${NPROC}
   LLVM_PARALLEL_COMPILE_JOBS=${NPROC}
   LLVM_PARALLEL_LINK_JOBS=${NPROC}
-  BUILD_SHARED_LIBS=ON
   LLVM_OPTIMIZED_TABLEGEN=ON
   CMAKE_C_FLAGS='-O3 -pipe -ffunction-sections -fdata-sections -fno-plt -fmerge-all-constants -fomit-frame-pointer -funroll-loops -falign-functions=64 -march=haswell -mtune=haswell -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
   CMAKE_CXX_FLAGS='-O3 -pipe -ffunction-sections -fdata-sections -fno-plt -fmerge-all-constants -fomit-frame-pointer -funroll-loops -falign-functions=64 -march=haswell -mtune=haswell -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
@@ -109,6 +108,7 @@ strip_binaries() {
 
   # clean unused files
   rm -rf strip .file-idx
+  find ${INSTALL} -name '*.a' -delete -or -name '*.la' -delete
 }
 
 git_release() {

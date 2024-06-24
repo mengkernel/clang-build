@@ -1,16 +1,94 @@
-name: Build test
+name: Build LLVM
 on:
   workflow_dispatch:
+env:
+  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
-  build-test:
-    runs-on: ubuntu-latest
+  profiling-build:
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v4
-    - name: Install dependencies
-      run: bash ci.sh deps
-    - name: Build LLVM
-      run: bash ci.sh llvm
-    - name: Build binutils
-      run: bash ci.sh binutils
-    - name: Build kernel
-      run: bash ci.sh kernel
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 5120
+          swap-size-mb: 10240
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        shell: sudo bash --noprofile --norc -e -o pipefail {0}
+        run: |
+          LLVM_VER=19
+          apt update && apt install -y --no-install-recommends \
+          lsb-release wget software-properties-common gnupg && \
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc && \
+          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy main" | tee -a /etc/apt/sources.list && \
+          apt update && apt upgrade -y && apt install -y --no-install-recommends bc binutils-dev u-boot-tools bison gcc g++ \
+          ca-certificates ccache clang lld cmake curl ninja-build file flex patchelf libelf-dev libssl-dev \
+          make python3-all-dev texinfo xz-utils zlib1g-dev hub help2man locales clang-${LLVM_VER} \
+          lldb-${LLVM_VER} lld-${LLVM_VER} clangd-${LLVM_VER} clang-tidy-${LLVM_VER} clang-format-${LLVM_VER} \
+          clang-tools-${LLVM_VER} llvm-${LLVM_VER}-dev llvm-${LLVM_VER}-tools libomp-${LLVM_VER}-dev \
+          libc++-${LLVM_VER}-dev libc++abi-${LLVM_VER}-dev libclang-common-${LLVM_VER}-dev \
+          libclang-${LLVM_VER}-dev libclang-cpp${LLVM_VER}-dev libunwind-${LLVM_VER}-dev \
+          libclang-rt-${LLVM_VER}-dev libpolly-${LLVM_VER}-dev ca-certificates build-essential ncurses-dev \
+          gperf patch libtool automake libncurses5-dev gawk subversion expat libexpat1-dev binutils-dev bc \
+          libcap-dev autoconf libgmp-dev pkg-config libmpc-dev libmpfr-dev autopoint gettext git txt2man \
+          liblzma-dev libz-dev mercurial tar zstd locales libzstd-dev gcc-multilib g++-multilib
+      - name: Build LLVM (profile)
+        run: ./ci.sh release
+      - name: Delete unnecessary files
+        run: find build/llvm/instrumented -type f ! -name 'profdata.prof' -delete
+      - name: Cache LLVM artifacts
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            build/llvm/instrumented
+            src/llvm-project
+          key: llvm-${{ github.run_id }}
+  final-build:
+    runs-on: ubuntu-22.04
+    needs: profiling-build
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 5120
+          swap-size-mb: 10240
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Restore LLVM artifacts
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            build/llvm/instrumented
+            src/llvm-project
+          key: llvm-${{ github.run_id }}
+      - name: Install dependencies
+        shell: sudo bash --noprofile --norc -e -o pipefail {0}
+        run: |
+          LLVM_VER=19
+          apt update && apt install -y --no-install-recommends \
+          lsb-release wget software-properties-common gnupg && \
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc && \
+          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy main" | tee -a /etc/apt/sources.list && \
+          apt update && apt upgrade -y && apt install -y --no-install-recommends bc binutils-dev u-boot-tools bison gcc g++ \
+          ca-certificates ccache clang lld cmake curl ninja-build file flex patchelf libelf-dev libssl-dev \
+          make python3-all-dev texinfo xz-utils zlib1g-dev hub help2man locales clang-${LLVM_VER} \
+          lldb-${LLVM_VER} lld-${LLVM_VER} clangd-${LLVM_VER} clang-tidy-${LLVM_VER} clang-format-${LLVM_VER} \
+          clang-tools-${LLVM_VER} llvm-${LLVM_VER}-dev llvm-${LLVM_VER}-tools libomp-${LLVM_VER}-dev \
+          libc++-${LLVM_VER}-dev libc++abi-${LLVM_VER}-dev libclang-common-${LLVM_VER}-dev \
+          libclang-${LLVM_VER}-dev libclang-cpp${LLVM_VER}-dev libunwind-${LLVM_VER}-dev \
+          libclang-rt-${LLVM_VER}-dev libpolly-${LLVM_VER}-dev ca-certificates build-essential ncurses-dev \
+          gperf patch libtool automake libncurses5-dev gawk subversion expat libexpat1-dev binutils-dev bc \
+          libcap-dev autoconf libgmp-dev pkg-config libmpc-dev libmpfr-dev autopoint gettext git txt2man \
+          liblzma-dev libz-dev mercurial tar zstd locales libzstd-dev gcc-multilib g++-multilib
+      - name: Build LLVM (profile)
+        run: ./ci.sh release final

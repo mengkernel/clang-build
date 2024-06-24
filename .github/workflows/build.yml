@@ -19,6 +19,12 @@ jobs:
           remove-codeql: 'true'
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Restore ccache
+        uses: hendrikmuhs/ccache-action@main
+        with:
+          key: ccache-llvm
+          max-size: 5G
+          save: false
       - name: Install dependencies
         shell: sudo bash --noprofile --norc -e -o pipefail {0}
         run: |
@@ -64,6 +70,12 @@ jobs:
           remove-codeql: 'true'
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Save ccache
+        uses: hendrikmuhs/ccache-action@main
+        with:
+          key: ccache-llvm
+          max-size: 4G
+          restore: false
       - name: Restore LLVM artifacts
         uses: actions/cache/restore@v4
         with:
@@ -90,5 +102,5 @@ jobs:
           gperf patch libtool automake libncurses5-dev gawk subversion expat libexpat1-dev binutils-dev bc \
           libcap-dev autoconf libgmp-dev pkg-config libmpc-dev libmpfr-dev autopoint gettext git txt2man \
           liblzma-dev libz-dev mercurial tar zstd locales libzstd-dev gcc-multilib g++-multilib
-      - name: Build LLVM (profile)
+      - name: Build LLVM (final)
         run: ./ci.sh release final

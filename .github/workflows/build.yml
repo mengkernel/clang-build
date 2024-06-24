@@ -12,7 +12,7 @@ jobs:
         uses: easimon/maximize-build-space@master
         with:
           root-reserve-mb: 5120
-          swap-size-mb: 10240
+          swap-size-mb: 15000
           remove-dotnet: 'true'
           remove-android: 'true'
           remove-haskell: 'true'
@@ -42,7 +42,8 @@ jobs:
           libclang-rt-${LLVM_VER}-dev libpolly-${LLVM_VER}-dev ca-certificates build-essential ncurses-dev \
           gperf patch libtool automake libncurses5-dev gawk subversion expat libexpat1-dev binutils-dev bc \
           libcap-dev autoconf libgmp-dev pkg-config libmpc-dev libmpfr-dev autopoint gettext git txt2man \
-          liblzma-dev libz-dev mercurial tar zstd locales libzstd-dev gcc-multilib g++-multilib
+          liblzma-dev libz-dev mercurial tar zstd locales libzstd-dev gcc-multilib g++-multilib && \
+          sysctl vm.swappiness=200
       - name: Build LLVM (profile)
         run: ./ci.sh release
       - name: Delete unnecessary files
@@ -62,7 +63,7 @@ jobs:
         uses: easimon/maximize-build-space@master
         with:
           root-reserve-mb: 5120
-          swap-size-mb: 10240
+          swap-size-mb: 15000
           remove-dotnet: 'true'
           remove-android: 'true'
           remove-haskell: 'true'
@@ -100,6 +101,7 @@ jobs:
           libclang-rt-${LLVM_VER}-dev libpolly-${LLVM_VER}-dev ca-certificates build-essential ncurses-dev \
           gperf patch libtool automake libncurses5-dev gawk subversion expat libexpat1-dev binutils-dev bc \
           libcap-dev autoconf libgmp-dev pkg-config libmpc-dev libmpfr-dev autopoint gettext git txt2man \
-          liblzma-dev libz-dev mercurial tar zstd locales libzstd-dev gcc-multilib g++-multilib
+          liblzma-dev libz-dev mercurial tar zstd locales libzstd-dev gcc-multilib g++-multilib && \
+          sysctl vm.swappiness=200
       - name: Build LLVM (final)
         run: ./ci.sh release final

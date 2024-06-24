@@ -12,8 +12,7 @@ export CUSTOM_FLAGS="
   LLVM_PARALLEL_TABLEGEN_JOBS=${NPROC}
   LLVM_PARALLEL_COMPILE_JOBS=${NPROC}
   LLVM_PARALLEL_LINK_JOBS=${NPROC}
-  LLVM_BUILD_LLVM_DYLIB=ON
-  LLVM_LINK_LLVM_DYLIB=ON
+  BUILD_SHARED_LIBS=ON
   LLVM_PARALLEL_TABLEGEN_JOBS=ON
   CMAKE_C_FLAGS='-O3 -ffunction-sections -fdata-sections -fno-plt -fmerge-all-constants -fomit-frame-pointer -funroll-loops -falign-functions=64 -march=haswell -mtune=haswell -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
   CMAKE_CXX_FLAGS='-O3 -ffunction-sections -fdata-sections -fno-plt -fmerge-all-constants -fomit-frame-pointer -funroll-loops -falign-functions=64 -march=haswell -mtune=haswell -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
@@ -109,11 +108,7 @@ strip_binaries() {
     while read -r file; do ./strip --strip-all-gnu "${file}"; done
 
   # clean unused files
-  rm -rf strip .file-idx \
-    ${INSTALL}/include \
-    ${INSTALL}/lib/cmake
-  find ${INSTALL} -type f -name *.a -delete
-  find ${INSTALL} -type f -name *.la -delete
+  rm -rf strip .file-idx
 }
 
 git_release() {

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export LLVM_NAME="kucing"
-export STABLE_TAG="llvmorg-18.1.7"
+export STABLE_TAG="llvmorg-18.1.8"
 export INSTALL="${PWD}/install"
 export CHAT_ID="-1001180467256"
 export BUILD_DATE="$(date +%Y%m%d)"
@@ -124,7 +124,7 @@ git_release() {
   if ${RELEASE}; then
     git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/Diaz1401/clang-stable.git clang -b main
   else
-    git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/Mengkernel/clang.git clang -b main
+    git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/mengkernel/clang.git clang -b main
   fi
   cd clang
   cat README |

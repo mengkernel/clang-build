@@ -69,8 +69,6 @@ build_llvm() {
     --install-folder "${INSTALL}" \
     --lto thin \
     --pgo llvm \
-    --bolt \
-    --assertions \
     --projects clang lld polly \
     --shallow-clone \
     --targets AArch64 X86 \

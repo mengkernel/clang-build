@@ -1,6 +1,8 @@
-name: Release LLVM Build
+name: Weekly LLVM Build
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 23 * * 5"
 env:
   GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
   TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
@@ -13,7 +15,7 @@ jobs:
       - name: Restore & save ccache
         uses: hendrikmuhs/ccache-action@main
         with:
-          key: ccache-llvm
+          key: ccache-llvm-weekly
           max-size: 5G
       - name: Install dependencies
         shell: sudo bash --noprofile --norc -e -o pipefail {0}
@@ -36,7 +38,7 @@ jobs:
           liblzma-dev libz-dev mercurial tar zstd locales libzstd-dev gcc-multilib g++-multilib && \
           sysctl vm.swappiness=200
       - name: Build LLVM (profile)
-        run: ./ci.sh release
+        run: ./ci.sh
       - name: Delete unnecessary files
         run: find build/llvm/instrumented -type f ! -name 'profdata.prof' -delete
       - name: Cache LLVM artifacts
@@ -45,7 +47,7 @@ jobs:
           path: |
             build/llvm/instrumented
             src/llvm-project
-          key: llvm-profiles
+          key: llvm-profiles-weekly
   final-build:
     runs-on: ubuntu-22.04
     needs: profiling-build
@@ -55,7 +57,7 @@ jobs:
       - name: Restore & save ccache
         uses: hendrikmuhs/ccache-action@main
         with:
-          key: ccache-llvm
+          key: ccache-llvm-weekly
           max-size: 5G
       - name: Restore LLVM artifacts
         uses: actions/cache/restore@v4
@@ -63,7 +65,7 @@ jobs:
           path: |
             build/llvm/instrumented
             src/llvm-project
-          key: llvm-profiles
+          key: llvm-profiles-weekly
       - name: Install dependencies
         shell: sudo bash --noprofile --norc -e -o pipefail {0}
         run: |
@@ -85,4 +87,4 @@ jobs:
           liblzma-dev libz-dev mercurial tar zstd locales libzstd-dev gcc-multilib g++-multilib && \
           sysctl vm.swappiness=200
       - name: Build LLVM (final)
-        run: ./ci.sh release final
+        run: ./ci.sh final

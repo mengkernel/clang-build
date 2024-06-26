@@ -106,7 +106,6 @@ strip_binaries() {
 
   # clean unused files
   rm -rf strip .file-idx
-  find ${INSTALL} -name '*.a' -delete -or -name '*.la' -delete
 }
 
 git_release() {

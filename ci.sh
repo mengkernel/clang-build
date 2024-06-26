@@ -120,7 +120,7 @@ git_release() {
   git config --global user.name github-actions[bot]
   git config --global user.email github-actions[bot]@users.noreply.github.com
   if ${RELEASE}; then
-    git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/Diaz1401/clang-stable.git clang -b main
+    git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/mengkernel/clang-stable.git clang -b main
   else
     git clone https://Diaz1401:${GITHUB_TOKEN}@github.com/mengkernel/clang.git clang -b main
   fi

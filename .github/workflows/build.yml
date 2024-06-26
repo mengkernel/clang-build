@@ -1,10 +1,9 @@
 name: Build LLVM
 on:
   workflow_dispatch:
-permissions: write-all
 env:
+  GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
   TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   profiling-build:
     runs-on: ubuntu-22.04
@@ -46,7 +45,7 @@ jobs:
           path: |
             build/llvm/instrumented
             src/llvm-project
-          key: llvm-${{ github.run_id }}
+          key: llvm-profiles
   final-build:
     runs-on: ubuntu-22.04
     needs: profiling-build
@@ -64,7 +63,7 @@ jobs:
           path: |
             build/llvm/instrumented
             src/llvm-project
-          key: llvm-${{ github.run_id }}
+          key: llvm-profiles
       - name: Install dependencies
         shell: sudo bash --noprofile --norc -e -o pipefail {0}
         run: |

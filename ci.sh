@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export LLVM_NAME="kucing"
-export STABLE_TAG="llvmorg-18.1.8"
+export STABLE_TAG="llvmorg-19.1.1"
 export INSTALL="${PWD}/install"
 export CHAT_ID="-1001180467256"
 export BUILD_DATE="$(date +%Y%m%d)"

@@ -16,7 +16,7 @@ jobs:
         uses: hendrikmuhs/ccache-action@main
         with:
           key: ccache-llvm
-          max-size: 5G
+          max-size: 2G
       - name: Build LLVM (profile)
         run: ./ci.sh release
       - name: Delete unnecessary files
@@ -27,7 +27,7 @@ jobs:
           path: |
             build/llvm/instrumented
             src/llvm-project
-          key: llvm-profiles
+          key: llvm-profiles-${{ github.run_id }}
   final-build:
     runs-on: ubuntu-latest
     container:
@@ -40,13 +40,13 @@ jobs:
         uses: hendrikmuhs/ccache-action@main
         with:
           key: ccache-llvm
-          max-size: 5G
+          max-size: 2G
       - name: Restore LLVM artifacts
         uses: actions/cache/restore@v4
         with:
           path: |
             build/llvm/instrumented
             src/llvm-project
-          key: llvm-profiles
+          key: llvm-profiles-${{ github.run_id }}
       - name: Build LLVM (final)
         run: ./ci.sh release final

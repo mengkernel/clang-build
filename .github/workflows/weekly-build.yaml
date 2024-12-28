@@ -6,6 +6,7 @@ on:
 env:
   GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
   TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+  TZ: "Asia/Jakarta"
 jobs:
   profiling-build:
     runs-on: ubuntu-latest

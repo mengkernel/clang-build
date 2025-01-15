@@ -13,8 +13,8 @@ export CUSTOM_FLAGS="
   LLVM_PARALLEL_COMPILE_JOBS=${NPROC}
   LLVM_PARALLEL_LINK_JOBS=${NPROC}
   LLVM_OPTIMIZED_TABLEGEN=ON
-  CMAKE_C_FLAGS='-O3 -pipe -ffunction-sections -fdata-sections -fno-plt -fmerge-all-constants -fomit-frame-pointer -funroll-loops -falign-functions=64 -march=skylake -mtune=skylake -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
-  CMAKE_CXX_FLAGS='-O3 -pipe -ffunction-sections -fdata-sections -fno-plt -fmerge-all-constants -fomit-frame-pointer -funroll-loops -falign-functions=64 -march=skylake -mtune=skylake -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
+  CMAKE_C_FLAGS='-O3 -pipe -ffunction-sections -fdata-sections -fno-plt -fmerge-all-constants -fomit-frame-pointer -funroll-loops -falign-functions=64 -march=haswell -mtune=diamondrapids -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
+  CMAKE_CXX_FLAGS='-O3 -pipe -ffunction-sections -fdata-sections -fno-plt -fmerge-all-constants -fomit-frame-pointer -funroll-loops -falign-functions=64 -march=haswell -mtune=diamondrapids -mllvm -polly -mllvm -polly-position=early -mllvm -polly-vectorizer=stripmine -mllvm -polly-run-dce'
   CMAKE_EXE_LINKER_FLAGS='-Wl,-O3,--lto-O3,--lto-CGO3,--gc-sections,--strip-debug'
   CMAKE_MODULE_LINKER_FLAGS='-Wl,-O3,--lto-O3,--lto-CGO3,--gc-sections,--strip-debug'
   CMAKE_SHARED_LINKER_FLAGS='-Wl,-O3,--lto-O3,--lto-CGO3,--gc-sections,--strip-debug'
@@ -127,7 +127,7 @@ git_release() {
   cat README |
     sed s/LLVM_VERSION/${CLANG_VERSION}-${BUILD_DATE}/g |
     sed s/SIZE/$(du -m ${INSTALL}/clang.tar.zst | cut -f1)/g >README.md
-  git commit --allow-empty -as -m "${MESSAGE}"
+  git commit --allow-empty -asm "${MESSAGE}"
   git push origin main
   cp ${INSTALL}/clang.tar.zst .
   hub release create -a clang.tar.zst -m "${MESSAGE}" ${BUILD_TAG}
@@ -138,9 +138,9 @@ git_release() {
 TOTAL_START=$(date +"%s")
 send_info "Date : " "${BUILD_DAY}"
 send_info "GitHub Action : " "Toolchain compilation started . . ."
-build_zstd
 build_llvm
 if ${FINAL}; then
+  build_zstd
   strip_binaries
   git_release
 fi

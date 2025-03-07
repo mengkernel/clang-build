@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export LLVM_NAME="kucing"
-export STABLE_TAG="llvmorg-17.0.6"
+export STABLE_TAG="llvmorg-20.1.0"
 export INSTALL="${PWD}/install"
 export CHAT_ID="-1001180467256"
 export BUILD_DATE="$(date +%Y%m%d)"
@@ -89,7 +89,7 @@ build_llvm() {
 }
 
 build_zstd() {
-  git clone https://github.com/facebook/zstd -b v1.5.6 --depth=1
+  git clone https://github.com/facebook/zstd -b v1.5.7 --depth=1
   cd zstd
   cmake build/cmake -DCMAKE_INSTALL_PREFIX="${INSTALL}/.zstd" |& tee -a build.log
   make -j${NPROC} |& tee -a build.log

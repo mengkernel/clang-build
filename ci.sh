@@ -71,7 +71,7 @@ build_llvm() {
     --pgo llvm \
     --projects clang lld polly \
     --shallow-clone \
-    --targets AArch64 X86 \
+    --targets AArch64 ARM X86 \
     --no-update \
     --vendor-string "${LLVM_NAME}" |& tee -a build.log
   BUILD_END=$(date +"%s")

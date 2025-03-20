@@ -65,10 +65,8 @@ build_llvm() {
   ./build-llvm.py ${ADD} \
     --build-type "Release" \
     --build-stage1-only \
-    --build-targets distribution \
     --defines "${CUSTOM_FLAGS}" \
     --install-folder "${INSTALL}" \
-    --install-targets distribution \
     --lto thin \
     --pgo llvm \
     --projects clang lld polly \
